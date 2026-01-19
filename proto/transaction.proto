@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package transaction;
+
+option java_package = "com.thesis.proto";
+option java_multiple_files = true;
+option java_outer_classname = "TransactionProto";
+
+message Transaction {
+  string id = 1;
+  string user_id = 2;
+  double amount = 3;
+  string currency = 4;
+  string region = 5;
+  TransactionType type = 6;
+  map<string, string> metadata = 7;
+  int64 timestamp = 8;
+  int32 retry_count = 9;
+}
+
+// Типи транзакцій
+enum TransactionType {
+  PAYMENT = 0;
+  REFUND = 1;
+  HEALTH_CHECK = 2;
+  BALANCE_UPDATE = 3;
+  ADMIN_ACTION = 4;
+}
+
+enum Priority {
+  LOW = 0;
+  STANDARD = 1;
+  HIGH = 2;
+  CRITICAL = 3;
+}
+
+message PrioritizedTransaction {
+  Transaction transaction = 1;
+  Priority priority = 2;
+  double score = 3;
+  int64 assigned_at = 4;
+  string gateway_instance = 5;
+}

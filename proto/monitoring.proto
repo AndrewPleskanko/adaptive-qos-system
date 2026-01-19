@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package monitoring;
+
+option java_package = "com.thesis.proto";
+option java_multiple_files = true;
+option java_outer_classname = "MonitoringProto";
+
+service MonitoringService {
+
+  rpc HealthCheck(HealthRequest) returns (HealthResponse);
+
+  rpc GetMetrics(MetricsRequest) returns (MetricsResponse);
+
+  rpc StreamMetrics(StreamRequest) returns (stream MetricsSnapshot);
+}
+
+message HealthRequest {
+  string service_name = 1;
+}
+
+message HealthResponse {
+  enum Status {
+    HEALTHY = 0;
+    DEGRADED = 1;
+    DOWN = 2;
+  }
+  Status status = 1;
+  string version = 2;
+  int64 uptime_seconds = 3;
+  map<string, string> details = 4;
+}
+
+message MetricsRequest {
+  string service_name = 1;
+  int64 from_timestamp = 2;
+  int64 to_timestamp = 3;
+}
+
+message MetricsResponse {
+  repeated MetricsSnapshot snapshots = 1;
+}
+
+message StreamRequest {
+  repeated string service_names = 1;
+  int32 interval_seconds = 2;
+}
+
+message MetricsSnapshot {
+  string service_name = 1;
+  int64 timestamp = 2;
+
+  double cpu_usage = 3;
+  double memory_usage = 4;
+  int32 active_threads = 5;
+
+  QueueMetrics high_priority_queue = 6;
+  QueueMetrics std_priority_queue = 7;
+  QueueMetrics low_priority_queue = 8;
+
+  ProcessingMetrics processing = 9;
+}
+
+message QueueMetrics {
+  int64 size = 1;
+  int64 consumer_lag = 2;
+  double avg_latency_ms = 3;
+}
+
+message ProcessingMetrics {
+  int64 total_processed = 1;
+  int64 high_priority_count = 2;
+  int64 std_priority_count = 3;
+  int64 low_priority_count = 4;
+  int64 errors_count = 5;
+  double avg_processing_time = 6;
+  double throughput_tps = 7;
+}
