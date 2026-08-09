@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package inference;
+
+import "transaction.proto";
+
+option java_package = "com.thesis.proto";
+option java_multiple_files = true;
+option java_outer_classname = "InferenceProto";
+
+service InferenceService {
+  rpc GetPriority(PriorityRequest) returns (PriorityResponse);
+
+  rpc GetBatchPriority(BatchPriorityRequest) returns (BatchPriorityResponse);
+
+  rpc UpdateSystemMetrics(SystemMetrics) returns (MetricsAck);
+}
+
+message PriorityRequest {
+  transaction.Transaction transaction = 1;
+  SystemState current_state = 2;
+}
+
+message PriorityResponse {
+  transaction.Priority priority = 1;
+  double score = 2;
+  string reason = 3;
+  int64 inference_time_ms = 4;
+}
+
+message BatchPriorityRequest {
+  repeated transaction.Transaction transactions = 1;
+  SystemState current_state = 2;
+}
+
+message BatchPriorityResponse {
+  repeated PriorityResponse responses = 1;
+}
+
+message SystemState {
+  double cpu_usage = 1;
+  double memory_usage = 2;
+  int64 consumer_lag = 3;
+  double dynamic_threshold = 4;
+  int32 active_consumers = 5;
+}
+
+message SystemMetrics {
+  string source = 1;
+  double cpu_usage = 2;
+  double memory_usage = 3;
+  int64 consumer_lag = 4;
+  int64 timestamp = 5;
+}
+
+message MetricsAck {
+  bool success = 1;
+  string message = 2;
+}

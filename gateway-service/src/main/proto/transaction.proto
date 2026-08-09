@@ -18,6 +18,7 @@ message Transaction {
   int32 retry_count = 9;
 }
 
+// Типи транзакцій
 enum TransactionType {
   PAYMENT = 0;
   REFUND = 1;

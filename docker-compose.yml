@@ -1,47 +1,34 @@
-version: '3.8'
-
 services:
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    hostname: zookeeper
-    container_name: thesis-zookeeper
-    ports:
-      - "2181:2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    networks:
-      - thesis-network
-
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
-    hostname: kafka
+    image: apache/kafka:4.3.0
     container_name: thesis-kafka
-    depends_on:
-      - zookeeper
     ports:
       - "9092:9092"
-      - "29092:29092"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
     networks:
       - thesis-network
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: redis:8.0-alpine
     container_name: thesis-redis
     ports:
       - "6379:6379"
@@ -56,10 +43,30 @@ services:
       timeout: 3s
       retries: 5
 
+  postgres:
+    image: postgres:17-alpine
+    container_name: thesis-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret_password
+      POSTGRES_DB: transaction_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - thesis-network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d transaction_db || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   inference-engine:
     build:
-      context: ./inference-engine
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./inference-engine/Dockerfile
     container_name: thesis-inference-engine
     ports:
       - "50051:50051"
@@ -76,15 +83,15 @@ services:
     networks:
       - thesis-network
     healthcheck:
-      test: ["CMD", "grpc_health_probe", "-addr=:50051"]
+      test: ["CMD", "python3", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
 
   gateway-service:
     build:
-      context: .
-      dockerfile: ./gateway-service/Dockerfile
+      context: ./gateway-service
+      dockerfile: Dockerfile
     container_name: thesis-gateway
     ports:
       - "8080:8080"
@@ -102,7 +109,7 @@ services:
       redis:
         condition: service_healthy
       inference-engine:
-        condition: service_healthy
+        condition: service_started
     networks:
       - thesis-network
     healthcheck:
@@ -113,21 +120,23 @@ services:
 
   core-processor:
     build:
-      context: .
-      dockerfile: ./core-processor/Dockerfile
-    container_name: thesis-processor
-    ports:
-      - "8081:8081"
+      context: ./core-processor
+      dockerfile: Dockerfile
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - SERVER_PORT=8081
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/transaction_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=secret_password
     depends_on:
       kafka:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     networks:
       - thesis-network
@@ -139,8 +148,24 @@ services:
       timeout: 5s
       retries: 5
 
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: thesis-kafka-ui
+    ports:
+      - "8090:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: thesis-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - thesis-network
+    restart: always
+
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.12.0
     container_name: thesis-prometheus
     ports:
       - "9090:9090"
@@ -154,7 +179,7 @@ services:
       - thesis-network
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.3.7
     container_name: thesis-grafana
     ports:
       - "3000:3000"
@@ -176,3 +201,4 @@ volumes:
   redis-data:
   prometheus-data:
   grafana-data:
+  pgdata:
