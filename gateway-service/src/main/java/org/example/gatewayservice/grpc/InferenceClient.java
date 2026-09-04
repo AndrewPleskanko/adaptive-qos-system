@@ -32,12 +32,56 @@ public class InferenceClient {
             return blockingStub.withDeadlineAfter(3, TimeUnit.SECONDS)
                     .getPriority(request);
         } catch (Exception e) {
-            log.error("Error calling InferenceEngine, falling back to STANDARD priority", e);
+            log.error("Error calling InferenceEngine, falling back to Java rule-based logic", e);
+            Priority fallbackPriority = computeFallbackPriority(request);
             return PriorityResponse.newBuilder()
-                    .setPriority(Priority.STANDARD)
+                    .setPriority(fallbackPriority)
                     .setScore(0.5)
-                    .setReason("Fallback due to error: " + e.getMessage())
+                    .setReason("Java Fallback due to error: " + e.getMessage())
                     .build();
+        }
+    }
+
+    private Priority computeFallbackPriority(PriorityRequest request) {
+        com.thesis.proto.Transaction tx = request.getTransaction();
+        com.thesis.proto.SystemState state = request.getCurrentState();
+        
+        double baseScore = 0.5;
+        switch (tx.getType()) {
+            case PAYMENT:
+                double amountScore = Math.min(tx.getAmount() / 5000.0, 1.0);
+                baseScore = 0.60 + amountScore * 0.30;
+                break;
+            case REFUND:
+                baseScore = 0.70;
+                break;
+            case BALANCE_UPDATE:
+                baseScore = 0.40;
+                break;
+            case ADMIN_ACTION:
+                baseScore = 0.85;
+                break;
+            case HEALTH_CHECK:
+            default:
+                baseScore = 0.15;
+                break;
+        }
+
+        double cpu = state.getCpuUsage();
+        double lag = state.getConsumerLag();
+        double pressure = (cpu / 100.0) * 0.4 + (lag / 5000.0) * 0.3;
+        
+        double retryBoost = Math.min(tx.getRetryCount() * 0.12, 0.36);
+        double finalScore = Math.max(0.0, Math.min(1.0, baseScore - pressure * 0.25 + retryBoost));
+
+        if (finalScore >= 0.82) {
+            return Priority.CRITICAL;
+        } else if (finalScore >= 0.58) {
+            return Priority.HIGH;
+        } else if (finalScore >= 0.32) {
+            return Priority.STANDARD;
+        } else {
+            return Priority.LOW;
         }
     }
 

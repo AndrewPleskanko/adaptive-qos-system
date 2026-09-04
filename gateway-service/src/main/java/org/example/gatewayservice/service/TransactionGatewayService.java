@@ -1,6 +1,7 @@
 package org.example.gatewayservice.service;
 
 import com.thesis.proto.PrioritizedTransaction;
+import com.thesis.proto.Priority;
 import com.thesis.proto.PriorityRequest;
 import com.thesis.proto.PriorityResponse;
 import com.thesis.proto.SystemState;
@@ -29,7 +30,11 @@ public class TransactionGatewayService {
     @Value("${spring.application.name:gateway-service}")
     private String instanceName;
 
+    @Value("${app.qos.mode:adaptive}")
+    private String qosMode;
+
     public TransactionResponse processTransaction(TransactionRequest request) {
+        long dispatchStart = System.nanoTime();
         String txId = UUID.randomUUID().toString();
 
         Transaction.Builder txBuilder = Transaction.newBuilder()
@@ -39,7 +44,7 @@ public class TransactionGatewayService {
                 .setCurrency(request.currency() != null ? request.currency() : "USD")
                 .setRegion(request.region() != null ? request.region() : "DEFAULT")
                 .setTimestamp(System.currentTimeMillis())
-                .setRetryCount(0);
+                .setRetryCount(request.retryCount());
 
         if (request.type() != null) {
             try {
@@ -58,14 +63,13 @@ public class TransactionGatewayService {
 
         Transaction transaction = txBuilder.build();
 
-        SystemState systemState = buildSystemState();
+        PriorityResponse priorityResponse = switch (qosMode.toLowerCase()) {
+            case "fifo" -> dispatchFifo();
+            case "static" -> dispatchStatic(transaction);
+            default -> dispatchAdaptive(transaction);
+        };
 
-        PriorityRequest priorityRequest = PriorityRequest.newBuilder()
-                .setTransaction(transaction)
-                .setCurrentState(systemState)
-                .build();
-
-        PriorityResponse priorityResponse = inferenceClient.getPriority(priorityRequest);
+        long decisionLatencyUs = (System.nanoTime() - dispatchStart) / 1_000;
 
         PrioritizedTransaction prioritizedTransaction = PrioritizedTransaction.newBuilder()
                 .setTransaction(transaction)
@@ -77,28 +81,65 @@ public class TransactionGatewayService {
 
         transactionProducer.sendTransaction(prioritizedTransaction);
 
-        log.info("Transaction {} processed: priority={}, score={}, reason={}",
-                txId, priorityResponse.getPriority().name(),
-                priorityResponse.getScore(), priorityResponse.getReason());
+        log.info("Transaction {} processed: mode={}, priority={}, score={}, latency={}us",
+                txId, qosMode, priorityResponse.getPriority().name(),
+                priorityResponse.getScore(), decisionLatencyUs);
 
         return new TransactionResponse(
                 txId,
                 priorityResponse.getPriority().name(),
                 priorityResponse.getScore(),
                 priorityResponse.getReason(),
-                "ACCEPTED"
+                "ACCEPTED",
+                decisionLatencyUs
         );
+    }
+
+    private PriorityResponse dispatchFifo() {
+        return PriorityResponse.newBuilder()
+                .setPriority(Priority.STANDARD)
+                .setScore(0.5)
+                .setReason("[fifo] No priority evaluation")
+                .build();
+    }
+
+    private PriorityResponse dispatchStatic(Transaction transaction) {
+        Priority priority = transaction.getType() == TransactionType.PAYMENT
+                ? Priority.CRITICAL
+                : Priority.LOW;
+        return PriorityResponse.newBuilder()
+                .setPriority(priority)
+                .setScore(priority == Priority.CRITICAL ? 0.95 : 0.2)
+                .setReason("[static] type=" + transaction.getType().name())
+                .build();
+    }
+
+    private PriorityResponse dispatchAdaptive(Transaction transaction) {
+        SystemState systemState = buildSystemState();
+
+        PriorityRequest priorityRequest = PriorityRequest.newBuilder()
+                .setTransaction(transaction)
+                .setCurrentState(systemState)
+                .build();
+
+        return inferenceClient.getPriority(priorityRequest);
     }
 
     private SystemState buildSystemState() {
         double cpu = metricsService.getCpuUsage();
         double memory = metricsService.getMemoryUsage();
         long lag = metricsService.getConsumerLag();
+        double lagGrowthRate = metricsService.getLagGrowthRate();
+        double dbPoolActive = metricsService.getDbPoolActive();
+        double p99Latency = metricsService.getRecentP99Latency();
 
         return SystemState.newBuilder()
                 .setCpuUsage(cpu)
                 .setMemoryUsage(memory)
                 .setConsumerLag(lag)
+                .setLagGrowthRate(lagGrowthRate)
+                .setDbPoolActive(dbPoolActive)
+                .setRecentP99Latency(p99Latency)
                 .setDynamicThreshold(0.5 + ((cpu + memory) / 200.0) * 0.3)
                 .setActiveConsumers(2)
                 .build();

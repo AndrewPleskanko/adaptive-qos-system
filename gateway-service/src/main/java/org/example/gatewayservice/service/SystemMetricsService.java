@@ -53,4 +53,20 @@ public class SystemMetricsService {
         }
     }
 
+    public double getLagGrowthRate() {
+        double baseRate = (Math.random() * 20.0) - 5.0;
+        return Math.round(baseRate * 100.0) / 100.0;
+    }
+
+    public double getDbPoolActive() {
+        double utilization = 0.1 + (Math.random() * 0.75);
+        return Math.round(utilization * 1000.0) / 1000.0;
+    }
+
+    public double getRecentP99Latency() {
+        double cpu = getCpuUsage();
+        double baseLatency = 12.0 + (cpu * 0.4) + (Math.random() * 5.0);
+        return Math.round(baseLatency * 10.0) / 10.0;
+    }
+
 }

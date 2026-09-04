@@ -43,6 +43,9 @@ message SystemState {
   int64 consumer_lag = 3;
   double dynamic_threshold = 4;
   int32 active_consumers = 5;
+  double lag_growth_rate = 6;
+  double db_pool_active = 7;
+  double recent_p99_latency = 8;
 }
 
 message SystemMetrics {

@@ -32,3 +32,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Machine learning binary artifacts
+*.pkl
+*.joblib
+*.onnx
+models/
+!models/.gitkeep

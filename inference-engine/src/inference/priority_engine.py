@@ -1,14 +1,3 @@
-"""
-Адаптивний алгоритм пріоритезації транзакцій.
-
-Підтримує два режими роботи:
-1. ML-режим: використовує навчену модель Decision Tree (якщо файл .pkl існує)
-2. Rule-based режим: використовує математичні правила (fallback)
-
-Для магістерської — це дозволяє порівняти ефективність ML vs Rule-based
-підходів у розділі "Експериментальні дослідження".
-"""
-
 import os
 import time
 import pickle
@@ -20,8 +9,13 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-TYPE_MAP = {"PAYMENT": 0, "REFUND": 1, "HEALTH_CHECK": 2, "BALANCE_UPDATE": 3, "ADMIN_ACTION": 4}
-REGION_MAP = {"US": 0, "EU": 1, "UK": 2, "DEFAULT": 3}
+TYPE_MAP = {
+    "PAYMENT": 4,
+    "REFUND": 3,
+    "BALANCE_UPDATE": 2,
+    "ADMIN_ACTION": 1,
+    "HEALTH_CHECK": 0
+}
 
 
 class Priority(IntEnum):
@@ -38,6 +32,9 @@ class SystemState:
     consumer_lag: int = 0
     dynamic_threshold: float = 0.5
     active_consumers: int = 1
+    lag_growth_rate: float = 0.0
+    db_pool_active: float = 0.15
+    recent_p99_latency: float = 15.0
 
 
 @dataclass
@@ -49,11 +46,11 @@ class PriorityResult:
 
 
 TRANSACTION_TYPE_WEIGHTS = {
-    "ADMIN_ACTION": 0.95,
-    "BALANCE_UPDATE": 0.7,
-    "PAYMENT": 0.5,
-    "REFUND": 0.6,
-    "HEALTH_CHECK": 0.1,
+    "PAYMENT": 0.95,
+    "ADMIN_ACTION": 0.85,
+    "REFUND": 0.70,
+    "BALANCE_UPDATE": 0.40,
+    "HEALTH_CHECK": 0.10,
 }
 
 DEFAULT_THRESHOLDS = {
@@ -64,14 +61,7 @@ DEFAULT_THRESHOLDS = {
 
 
 class PriorityEngine:
-    """
-    Адаптивний движок пріоритезації з підтримкою ML-моделі.
-
-    При ініціалізації намагається завантажити навчену модель з файлу.
-    Якщо файл не знайдено — працює в rule-based режимі.
-    """
-
-    def __init__(self, model_path: str | None = None):
+    def __init__(self, model_path: str = None):
         self._system_state = SystemState()
         self._thresholds = dict(DEFAULT_THRESHOLDS)
         self._total_inferences = 0
@@ -97,17 +87,21 @@ class PriorityEngine:
             logger.warning("Failed to load ML model: %s. Using rule-based mode", e)
 
     def update_system_state(self, cpu: float, memory: float,
-                            lag: int, threshold: float, consumers: int):
+                            lag: int, threshold: float, consumers: int,
+                            lag_growth: float = 0.0, db_pool: float = 0.15, p99: float = 15.0):
         self._system_state = SystemState(
             cpu_usage=cpu,
             memory_usage=memory,
             consumer_lag=lag,
             dynamic_threshold=threshold,
             active_consumers=max(consumers, 1),
+            lag_growth_rate=lag_growth,
+            db_pool_active=db_pool,
+            recent_p99_latency=p99
         )
         self._recalculate_thresholds()
 
-    def classify(self, transaction: dict, system_state: dict | None = None) -> PriorityResult:
+    def classify(self, transaction: dict, system_state: dict = None) -> PriorityResult:
         start = time.monotonic_ns()
 
         if system_state:
@@ -117,15 +111,25 @@ class PriorityEngine:
                 lag=system_state.get("consumer_lag", 0),
                 threshold=system_state.get("dynamic_threshold", 0.5),
                 consumers=system_state.get("active_consumers", 1),
+                lag_growth=system_state.get("lag_growth_rate", 0.0),
+                db_pool=system_state.get("db_pool_active", 0.15),
+                p99=system_state.get("recent_p99_latency", 15.0),
             )
 
-        if self._ml_model is not None:
-            result = self._classify_ml(transaction)
-        else:
+        try:
+            if self._ml_model is not None:
+                result = self._classify_ml(transaction)
+                elapsed_ms = (time.monotonic_ns() - start) // 1_000_000
+                if elapsed_ms > 1:
+                    logger.warning("ML inference breached 1ms deadline (%dms). Falling back to rule-based policy.", elapsed_ms)
+                    result = self._classify_rules(transaction)
+            else:
+                result = self._classify_rules(transaction)
+        except Exception as e:
+            logger.error("ML inference failed: %s. Falling back to rule-based policy.", e)
             result = self._classify_rules(transaction)
 
         elapsed_ms = (time.monotonic_ns() - start) // 1_000_000
-
         self._total_inferences += 1
         self._priority_counts[result.priority] += 1
 
@@ -136,22 +140,35 @@ class PriorityEngine:
             inference_time_ms=elapsed_ms,
         )
 
-    # ── ML-based класифікація ──────────────────────────────────────
-
     def _classify_ml(self, tx: dict) -> PriorityResult:
-        features = np.array([[
-            float(tx.get("amount", 0)),
-            TYPE_MAP.get(tx.get("type", "PAYMENT"), 0),
-            int(tx.get("retry_count", 0)),
-            REGION_MAP.get(tx.get("region", "DEFAULT"), 3),
-            self._system_state.cpu_usage,
-            self._system_state.memory_usage,
-            self._system_state.consumer_lag,
-        ]])
-
-        predicted_class = int(self._ml_model.predict(features)[0])
-        probabilities = self._ml_model.predict_proba(features)[0]
-        confidence = float(probabilities[predicted_class])
+        try:
+            from lookup_rules import predict_priority
+            features = {
+                "amount": float(tx.get("amount", 0)),
+                "type_code": TYPE_MAP.get(tx.get("type", "PAYMENT"), 4),
+                "retry_count": int(tx.get("retry_count", 0)),
+                "consumer_lag": int(self._system_state.consumer_lag),
+                "lag_growth_rate": float(self._system_state.lag_growth_rate),
+                "worker_cpu": float(self._system_state.cpu_usage),
+                "db_pool_active": float(self._system_state.db_pool_active),
+                "recent_p99_latency": float(self._system_state.recent_p99_latency)
+            }
+            predicted_class, confidence = predict_priority(features)
+        except Exception as e:
+            logger.debug("Native lookup failed: %s. Reverting to sklearn predict.", e)
+            sklearn_features = np.array([[
+                float(tx.get("amount", 0)),
+                TYPE_MAP.get(tx.get("type", "PAYMENT"), 4),
+                int(tx.get("retry_count", 0)),
+                int(self._system_state.consumer_lag),
+                float(self._system_state.lag_growth_rate),
+                float(self._system_state.cpu_usage),
+                float(self._system_state.db_pool_active),
+                float(self._system_state.recent_p99_latency)
+            ]])
+            predicted_class = int(self._ml_model.predict(sklearn_features)[0])
+            probabilities = self._ml_model.predict_proba(sklearn_features)[0]
+            confidence = float(probabilities[predicted_class])
 
         priority = Priority(predicted_class)
         reason = (
@@ -162,8 +179,6 @@ class PriorityEngine:
         )
 
         return PriorityResult(priority=priority, score=confidence, reason=reason, inference_time_ms=0)
-
-    # ── Rule-based класифікація (fallback) ─────────────────────────
 
     def _classify_rules(self, tx: dict) -> PriorityResult:
         base_score = self._compute_base_score(tx)
@@ -186,23 +201,15 @@ class PriorityEngine:
 
         tx_type = tx.get("type", "PAYMENT")
         type_score = TRANSACTION_TYPE_WEIGHTS.get(tx_type, 0.5)
-        scores.append(("type", type_score, 0.35))
+        scores.append(("type", type_score, 0.50))
 
         amount = float(tx.get("amount", 0))
         amount_score = np.clip(amount / 10_000.0, 0.0, 1.0)
-        scores.append(("amount", amount_score, 0.25))
+        scores.append(("amount", amount_score, 0.30))
 
         retry = int(tx.get("retry_count", 0))
         retry_score = np.clip(retry / 5.0, 0.0, 1.0)
         scores.append(("retry", retry_score, 0.20))
-
-        region = tx.get("region", "DEFAULT")
-        region_score = 0.8 if region in ("US", "EU", "UK") else 0.4
-        scores.append(("region", region_score, 0.10))
-
-        currency = tx.get("currency", "USD")
-        currency_score = 0.6 if currency in ("USD", "EUR", "GBP") else 0.3
-        scores.append(("currency", currency_score, 0.10))
 
         total = sum(score * weight for _, score, weight in scores)
         return float(np.clip(total, 0.0, 1.0))
@@ -243,5 +250,8 @@ class PriorityEngine:
                 "cpu": self._system_state.cpu_usage,
                 "memory": self._system_state.memory_usage,
                 "lag": self._system_state.consumer_lag,
+                "lag_growth": self._system_state.lag_growth_rate,
+                "db_pool": self._system_state.db_pool_active,
+                "p99": self._system_state.recent_p99_latency
             },
         }

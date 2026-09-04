@@ -19,7 +19,7 @@ public class TransactionProducer {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    
+
     public void sendTransaction(PrioritizedTransaction prioritizedTransaction) {
         String topic = getTopicForPriority(prioritizedTransaction.getPriority());
         String key = prioritizedTransaction.getTransaction().getId();
@@ -58,7 +58,7 @@ public class TransactionProducer {
             case CRITICAL -> "tx.priority.critical";
             case HIGH -> "tx.priority.high";
             case STANDARD -> "tx.priority.standard";
-            case LOW, UNRECOGNIZED -> "tx.priority.standard";
+            case LOW, UNRECOGNIZED -> "tx.priority.low";
         };
     }
 }

@@ -10,11 +10,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
 
-/**
- * Збирає метрики JVM (CPU, Memory) і публікує їх у Redis кожні 5 секунд.
- * Gateway-service читає ці значення для побудови SystemState,
- * який передається в inference-engine для адаптивного налаштування порогів.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor

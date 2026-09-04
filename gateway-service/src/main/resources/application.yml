@@ -27,3 +27,7 @@ management:
   endpoint:
     health:
       show-details: always
+
+app:
+  qos:
+    mode: ${PRIORITY_MODE:adaptive}

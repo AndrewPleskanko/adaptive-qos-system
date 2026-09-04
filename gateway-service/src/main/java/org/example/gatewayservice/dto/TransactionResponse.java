@@ -5,5 +5,6 @@ public record TransactionResponse(
         String priority,
         double score,
         String reason,
-        String status
+        String status,
+        long decisionLatencyUs
 ) {}

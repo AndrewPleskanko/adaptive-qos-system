@@ -1,12 +1,3 @@
-"""
-In-memory сховище метрик системи з опціональною синхронізацією в Redis.
-
-Навіщо це потрібно:
-  Inference Engine потрібно знати поточний стан системи (CPU, memory, lag)
-  щоб коригувати пороги пріоритезації. Ці метрики приходять від
-  gateway-service та core-processor через gRPC виклик UpdateSystemMetrics().
-"""
-
 import time
 import logging
 from dataclasses import dataclass, field
@@ -27,14 +18,6 @@ class MetricSnapshot:
 
 
 class MetricsStore:
-    """
-    Зберігає останні N метрик та обчислює агреговані значення.
-
-    Використовує ковзне вікно (sliding window) для згладжування
-    короткочасних сплесків — без цього один випадковий spike CPU
-    міг би різко змінити пріоритети сотень транзакцій.
-    """
-
     def __init__(self, window_size: int = 10):
         self._history: deque[MetricSnapshot] = deque(maxlen=MAX_HISTORY)
         self._window_size = window_size
@@ -60,6 +43,9 @@ class MetricsStore:
                 "consumer_lag": 0,
                 "active_consumers": 1,
                 "dynamic_threshold": 0.5,
+                "lag_growth_rate": 0.0,
+                "db_pool_active": 0.15,
+                "recent_p99_latency": 15.0,
             }
 
         recent = list(self._history)[-self._window_size:]
@@ -77,6 +63,9 @@ class MetricsStore:
             "consumer_lag": max_lag,
             "active_consumers": max(sources, 1),
             "dynamic_threshold": round(threshold, 3),
+            "lag_growth_rate": 0.0,
+            "db_pool_active": 0.15,
+            "recent_p99_latency": 15.0,
         }
 
     @property

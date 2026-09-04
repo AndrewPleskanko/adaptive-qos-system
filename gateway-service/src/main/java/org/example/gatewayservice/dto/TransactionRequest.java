@@ -8,5 +8,6 @@ public record TransactionRequest(
         String currency,
         String region,
         String type,
-        Map<String, String> metadata
+        Map<String, String> metadata,
+        int retryCount
 ) {}

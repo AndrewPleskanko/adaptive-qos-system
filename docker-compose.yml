@@ -83,7 +83,7 @@ services:
     networks:
       - thesis-network
     healthcheck:
-      test: ["CMD", "python3", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
+      test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:50051"]
       interval: 10s
       timeout: 5s
       retries: 5

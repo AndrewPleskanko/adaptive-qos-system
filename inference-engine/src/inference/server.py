@@ -1,19 +1,3 @@
-"""
-gRPC сервер для Inference Engine.
-
-Архітектурне рішення (для магістерської):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Чому gRPC, а не REST для inference:
-1. Protobuf бінарна серіалізація — у 3-10x менший розмір ніж JSON
-2. HTTP/2 multiplexing — один TCP connection для всіх запитів
-3. Строга типізація контрактів через .proto файли
-4. Підтримка streaming (для batch inference)
-
-Для зв'язку Gateway → Inference це критично:
-кожна транзакція вимагає класифікації з latency < 5ms,
-а REST+JSON додав би 2-3ms оверхеду на серіалізацію.
-"""
-
 import os
 import sys
 import time
@@ -24,7 +8,6 @@ import grpc
 from grpc_health.v1 import health, health_pb2, health_pb2_grpc
 from grpc_reflection.v1alpha import reflection
 
-# Додаємо generated папку до sys.path для імпорту згенерованих proto класів
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'generated'))
 
 import transaction_pb2
@@ -42,15 +25,6 @@ logger = logging.getLogger("inference-engine")
 
 
 class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
-    """
-    Реалізація gRPC InferenceService.
-
-    Три RPC методи:
-    - GetPriority: класифікація однієї транзакції
-    - GetBatchPriority: класифікація пакета транзакцій
-    - UpdateSystemMetrics: оновлення метрик від інших сервісів
-    """
-
     def __init__(self):
         self._engine = PriorityEngine()
         self._metrics = MetricsStore()
@@ -140,6 +114,9 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
             "consumer_lag": state.consumer_lag,
             "dynamic_threshold": state.dynamic_threshold,
             "active_consumers": state.active_consumers,
+            "lag_growth_rate": state.lag_growth_rate,
+            "db_pool_active": state.db_pool_active,
+            "recent_p99_latency": state.recent_p99_latency,
         }
 
 
@@ -153,14 +130,11 @@ def serve():
         InferenceServicer(), server
     )
 
-    # Health checking — потрібно щоб Docker healthcheck (grpc_health_probe) працював
     health_servicer = health.HealthServicer()
     health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
     health_servicer.set("inference.InferenceService", health_pb2.HealthCheckResponse.SERVING)
     health_servicer.set("", health_pb2.HealthCheckResponse.SERVING)
 
-    # Reflection — дозволяє інструментам типу grpcurl автоматично
-    # знаходити сервіси та методи без .proto файлів
     service_names = (
         inference_pb2.DESCRIPTOR.services_by_name["InferenceService"].full_name,
         health_pb2.DESCRIPTOR.services_by_name["Health"].full_name,

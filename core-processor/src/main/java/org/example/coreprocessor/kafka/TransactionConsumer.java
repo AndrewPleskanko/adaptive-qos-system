@@ -9,9 +9,6 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
-/**
- * Kafka consumer listening to prioritized transaction topics.
- */
 @Component
 @Slf4j
 @RequiredArgsConstructor

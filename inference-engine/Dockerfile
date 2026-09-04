@@ -52,4 +52,4 @@ USER appuser
 
 EXPOSE 50051
 
-CMD ["python", "-u", "src/inference/server.py"]
+CMD ["sh", "-c", "python src/inference/train.py && python -u src/inference/server.py"]
