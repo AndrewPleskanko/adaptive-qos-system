@@ -39,3 +39,9 @@ build/
 *.onnx
 models/
 !models/.gitkeep
+
+.thesis/
+.thesis/*
+
+thesis/
+thesis/*

@@ -33,6 +33,15 @@ public class TransactionGatewayService {
     @Value("${app.qos.mode:adaptive}")
     private String qosMode;
 
+    public String getQosMode() {
+        return qosMode;
+    }
+
+    public void setQosMode(String qosMode) {
+        log.info("Switching QoS mode from '{}' to '{}'", this.qosMode, qosMode);
+        this.qosMode = qosMode;
+    }
+
     public TransactionResponse processTransaction(TransactionRequest request) {
         long dispatchStart = System.nanoTime();
         String txId = UUID.randomUUID().toString();
