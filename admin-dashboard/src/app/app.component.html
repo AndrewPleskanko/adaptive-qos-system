@@ -1,383 +1,472 @@
-<div class="dashboard-container">
-  <!-- Header -->
-  <header class="dashboard-header">
-    <div class="header-content">
-      <div class="brand">
-        <div class="angular-logo">
-          <svg viewBox="0 0 250 250" width="36" height="36">
-            <polygon points="125,30 125,30 125,30 31.9,63.2 46.1,186.3 125,230 125,230 125,230 203.9,186.3 218.1,63.2" fill="#DD0031"/>
-            <polygon points="125,30 125,52.2 125,52.1 125,153.4 125,153.4 125,230 203.9,186.3 218.1,63.2" fill="#C3002F"/>
-            <path d="M125,52.1 L66.8,182.6 L91.7,182.6 L103.5,153.1 L146.3,153.1 L158.2,182.6 L183.1,182.6 L125,52.1 Z M113,129.5 L125,100.5 L136.9,129.5 L113,129.5 Z" fill="#FFFFFF"/>
-          </svg>
+<div class="dashboard-shell">
+  <!-- Top Navigation Bar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="app-logo">
+        <i class="pi pi-server"></i>
+      </div>
+      <div>
+        <div class="app-title-row">
+          <h1 class="app-title">Adaptive QoS System</h1>
+          <span class="version-tag">v2.0-SNAPSHOT</span>
         </div>
-        <div>
-          <h1>Adaptive QoS System Admin Panel</h1>
-          <p class="subtitle">Distributed Message Broker QoS Control & Test Bench (Angular 18)</p>
-        </div>
+        <p class="app-subtitle">Message Broker Telemetry & Dynamic Flow Control Console</p>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="status-indicator">
+        <span class="status-dot" [ngClass]="connectionStatus.toLowerCase()"></span>
+        <span class="status-label">Gateway: {{ connectionStatus }}</span>
       </div>
 
-      <div class="status-indicator" [ngClass]="connectionStatus.toLowerCase()">
-        <span class="status-dot"></span>
-        <span class="status-text">Gateway: {{ connectionStatus }}</span>
-        <button class="btn-refresh" (click)="checkHealthAndFetchMode()">🔄 Refresh</button>
+      <div class="tool-links">
+        <a href="http://localhost:8090" target="_blank" class="nav-link-btn" title="Open Apache Kafka Web UI">
+          <i class="pi pi-list"></i> Kafka UI
+        </a>
+        <a href="http://localhost:3000" target="_blank" class="nav-link-btn" title="Open Grafana Dashboards">
+          <i class="pi pi-chart-line"></i> Grafana
+        </a>
       </div>
+
+      <p-button
+        icon="pi pi-refresh"
+        label="Refresh"
+        [outlined]="true"
+        size="small"
+        severity="secondary"
+        (onClick)="checkHealthAndFetchMode()">
+      </p-button>
     </div>
   </header>
 
-  <!-- Error alert -->
-  <div class="alert alert-danger" *ngIf="errorMessage">
-    ⚠️ {{ errorMessage }}
+  <!-- Alert -->
+  <div class="system-alert" *ngIf="errorMessage">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>{{ errorMessage }}</span>
   </div>
 
-  <main class="dashboard-main">
-    <!-- Section 1: QoS Dispatch Mode Selection -->
-    <section class="card qos-mode-section">
-      <div class="card-header">
-        <h2>⚡ Live QoS Dispatcher Mode Selection</h2>
-        <span class="active-mode-tag">Current Mode: <strong>{{ currentMode | uppercase }}</strong></span>
+  <main class="dashboard-body">
+    <!-- SECTION 1: QoS Dispatch Mode Switcher -->
+    <section class="console-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Dispatch Policy Configuration</h2>
+          <p class="section-desc">Select active routing and QoS classification policy on Gateway Service</p>
+        </div>
+        <div class="active-policy-badge">
+          Active: <code>{{ currentMode | uppercase }}</code>
+        </div>
       </div>
 
-      <div class="mode-grid">
-        <!-- Adaptive ML Card -->
-        <div class="mode-card" [class.selected]="currentMode.toLowerCase() === 'adaptive'" (click)="setQosMode('adaptive')">
-          <div class="mode-icon green">🤖</div>
-          <h3>Adaptive ML</h3>
-          <p class="mode-desc">
-            gRPC ML Decision Tree classifier. Dynamic SLA protection using telemetry (CPU, Lag, Latency).
-          </p>
-          <div class="mode-badges">
-            <span class="badge">Dynamic SLA</span>
-            <span class="badge">gRPC ML</span>
-            <span class="badge">Telemetry-Aware</span>
+      <div class="policy-switcher-grid">
+        <!-- Adaptive Policy -->
+        <div
+          class="policy-card"
+          [class.selected]="currentMode.toLowerCase() === 'adaptive'"
+          (click)="setQosMode('adaptive')">
+          <div class="policy-card-header">
+            <div class="policy-name">
+              <span class="radio-indicator"></span>
+              <strong>Adaptive ML</strong>
+            </div>
+            <p-tag
+              *ngIf="currentMode.toLowerCase() === 'adaptive'"
+              value="ACTIVE"
+              severity="success"
+              styleClass="compact-tag">
+            </p-tag>
           </div>
-          <button class="btn-select" [disabled]="loadingMode">
-            {{ currentMode.toLowerCase() === 'adaptive' ? '✓ Active Mode' : 'Select Adaptive' }}
-          </button>
+          <p class="policy-summary">
+            Multi-signal CART classifier compiled into native decision branches. Uses CPU, Kafka lag growth rate, HikariCP saturation, and rolling P99 latency.
+          </p>
+          <div class="policy-meta">
+            <span class="meta-item">Dynamic Threshold &theta;(t)</span>
+            <span class="meta-item">&lt;100&mu;s Decision</span>
+            <span class="meta-item">4-Tier Routing</span>
+          </div>
         </div>
 
-        <!-- Static Priority Card -->
-        <div class="mode-card" [class.selected]="currentMode.toLowerCase() === 'static'" (click)="setQosMode('static')">
-          <div class="mode-icon blue">📋</div>
-          <h3>Static Priority</h3>
-          <p class="mode-desc">
-            Fixed business rules. PAYMENT → CRITICAL, all other types → LOW. Oblivious to CPU/Lag degradation.
-          </p>
-          <div class="mode-badges">
-            <span class="badge">Static Rules</span>
-            <span class="badge">Type-Based</span>
+        <!-- Static Priority Policy -->
+        <div
+          class="policy-card"
+          [class.selected]="currentMode.toLowerCase() === 'static'"
+          (click)="setQosMode('static')">
+          <div class="policy-card-header">
+            <div class="policy-name">
+              <span class="radio-indicator"></span>
+              <strong>Static Rules</strong>
+            </div>
+            <p-tag
+              *ngIf="currentMode.toLowerCase() === 'static'"
+              value="ACTIVE"
+              severity="info"
+              styleClass="compact-tag">
+            </p-tag>
           </div>
-          <button class="btn-select" [disabled]="loadingMode">
-            {{ currentMode.toLowerCase() === 'static' ? '✓ Active Mode' : 'Select Static' }}
-          </button>
+          <p class="policy-summary">
+            Heuristic type-based dispatch. Maps PAYMENT to CRITICAL and all secondary transaction types to LOW. Oblivious to infrastructure load and worker exhaustion.
+          </p>
+          <div class="policy-meta">
+            <span class="meta-item">Fixed Type Map</span>
+            <span class="meta-item">No Telemetry Feedback</span>
+          </div>
         </div>
 
-        <!-- FIFO Card -->
-        <div class="mode-card" [class.selected]="currentMode.toLowerCase() === 'fifo'" (click)="setQosMode('fifo')">
-          <div class="mode-icon gray">⏳</div>
-          <h3>FIFO</h3>
-          <p class="mode-desc">
-            Standard single-tier message queueing. All messages routed to STANDARD topic without priority.
-          </p>
-          <div class="mode-badges">
-            <span class="badge">No Priority</span>
-            <span class="badge">Baseline</span>
+        <!-- FIFO Baseline Policy -->
+        <div
+          class="policy-card"
+          [class.selected]="currentMode.toLowerCase() === 'fifo'"
+          (click)="setQosMode('fifo')">
+          <div class="policy-card-header">
+            <div class="policy-name">
+              <span class="radio-indicator"></span>
+              <strong>FIFO Baseline</strong>
+            </div>
+            <p-tag
+              *ngIf="currentMode.toLowerCase() === 'fifo'"
+              value="ACTIVE"
+              severity="secondary"
+              styleClass="compact-tag">
+            </p-tag>
           </div>
-          <button class="btn-select" [disabled]="loadingMode">
-            {{ currentMode.toLowerCase() === 'fifo' ? '✓ Active Mode' : 'Select FIFO' }}
-          </button>
+          <p class="policy-summary">
+            Standard single-tier queuing baseline. All incoming transactions are published into standard queue without priority evaluation. Head-of-line blocking under burst.
+          </p>
+          <div class="policy-meta">
+            <span class="meta-item">Single Topic</span>
+            <span class="meta-item">Reference Benchmark</span>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Section 2: Benchmark Test Execution -->
-    <section class="card test-runner-section">
-      <div class="card-header">
-        <h2>🧪 Live Stress & Benchmark Test Runner</h2>
+    <!-- SECTION 2: Test Generator & Control Panel -->
+    <section class="console-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Traffic Generator & Micro-Benchmark</h2>
+          <p class="section-desc">Generate synthetic transaction workloads to evaluate decision latency and priority distribution</p>
+        </div>
       </div>
 
-      <div class="test-form">
-        <div class="form-group">
-          <label for="testCount">Transaction Batch Count:</label>
-          <select id="testCount" [(ngModel)]="testCount">
-            <option [ngValue]="10">10 Transactions</option>
-            <option [ngValue]="20">20 Transactions</option>
-            <option [ngValue]="50">50 Transactions</option>
-            <option [ngValue]="100">100 Transactions</option>
-          </select>
+      <div class="control-toolbar">
+        <div class="toolbar-group">
+          <label class="control-label">Batch Size</label>
+          <p-select
+            [options]="countOptions"
+            [(ngModel)]="testCount"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="compact-select">
+          </p-select>
         </div>
 
-        <div class="form-group">
-          <label for="testType">Transaction Type Mix:</label>
-          <select id="testType" [(ngModel)]="testType">
-            <option value="MIXED">MIXED (Random Real-world Workload)</option>
-            <option value="PAYMENT">PAYMENT Only</option>
-            <option value="REFUND">REFUND Only</option>
-            <option value="BALANCE_UPDATE">BALANCE_UPDATE Only</option>
-            <option value="HEALTH_CHECK">HEALTH_CHECK Only</option>
-          </select>
+        <div class="toolbar-group">
+          <label class="control-label">Workload Profile</label>
+          <p-select
+            [options]="typeOptions"
+            [(ngModel)]="testType"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="compact-select">
+          </p-select>
         </div>
 
-        <button class="btn-run-test" (click)="runTestBurst()" [disabled]="runningTest || connectionStatus !== 'ONLINE'">
-          <span *ngIf="!runningTest">🚀 Launch Test Burst</span>
-          <span *ngIf="runningTest">⏳ Processing Transactions...</span>
-        </button>
+        <div class="toolbar-action">
+          <p-button
+            label="Execute Active Mode"
+            icon="pi pi-play"
+            size="small"
+            severity="primary"
+            [loading]="runningTest"
+            [disabled]="runningTest || runningComparison || connectionStatus !== 'ONLINE'"
+            (onClick)="runTestBurst()">
+          </p-button>
+
+          <p-button
+            label="Compare All 3 Modes Side-by-Side"
+            icon="pi pi-chart-bar"
+            size="small"
+            severity="contrast"
+            [loading]="runningComparison"
+            [disabled]="runningTest || runningComparison || connectionStatus !== 'ONLINE'"
+            (onClick)="runComparativeBenchmark()">
+          </p-button>
+        </div>
       </div>
     </section>
 
-    <!-- Section 3: Test Results & Telemetry Analytics -->
-    <section class="card results-section" *ngIf="testResult">
-      <div class="card-header">
-        <h2>📊 Test Run Results & QoS Analytics</h2>
-        <span class="timestamp">Mode: <strong>{{ testResult.modeUsed | uppercase }}</strong></span>
+    <!-- SECTION 3: 3-Way Comparative Benchmark Results & Chart -->
+    <section class="console-section comparison-section" *ngIf="comparisonResult">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">3-Way Comparative Policy Evaluation</h2>
+          <p class="section-desc">
+            Evaluated <strong>{{ comparisonResult.batchSize }} transactions</strong> sequentially across FIFO, Static, and Adaptive QoS dispatchers
+          </p>
+        </div>
+        <span class="badge-status-ready">Evaluation Complete</span>
       </div>
 
-      <!-- Metrics Row -->
-      <div class="metrics-grid">
-        <div class="metric-box">
-          <span class="metric-label">Total Transactions</span>
-          <span class="metric-value">{{ testResult.totalTransactions }}</span>
+      <!-- Comparative Queue Distribution Visual Bars -->
+      <div class="comparison-charts-panel">
+        <h3 class="chart-panel-title">Queue Allocation Breakdown by Policy ({{ comparisonResult.batchSize }} tx)</h3>
+
+        <!-- FIFO Bar -->
+        <div class="policy-bar-row">
+          <div class="row-label">
+            <span class="policy-tag-badge fifo">FIFO Baseline</span>
+            <span class="sub-label">Mean: <strong>{{ comparisonResult.fifo.avgDecisionLatencyUs }} &mu;s</strong></span>
+          </div>
+          <div class="stacked-bar">
+            <div class="bar-segment standard"
+                 [style.width.%]="getPercent(comparisonResult.fifo.priorityDistribution['STANDARD'], comparisonResult.batchSize)">
+              <span>STANDARD: {{ comparisonResult.fifo.priorityDistribution['STANDARD'] || 0 }} (100%)</span>
+            </div>
+          </div>
         </div>
-        <div class="metric-box">
-          <span class="metric-label">Avg Decision Latency</span>
-          <span class="metric-value">{{ testResult.avgDecisionLatencyUs }} <small>μs</small></span>
+
+        <!-- Static Bar -->
+        <div class="policy-bar-row">
+          <div class="row-label">
+            <span class="policy-tag-badge static">Static Rules</span>
+            <span class="sub-label">Mean: <strong>{{ comparisonResult.static.avgDecisionLatencyUs }} &mu;s</strong></span>
+          </div>
+          <div class="stacked-bar">
+            <div class="bar-segment critical"
+                 [style.width.%]="getPercent(comparisonResult.static.priorityDistribution['CRITICAL'], comparisonResult.batchSize)">
+              <span *ngIf="comparisonResult.static.priorityDistribution['CRITICAL']">CRITICAL: {{ comparisonResult.static.priorityDistribution['CRITICAL'] }}</span>
+            </div>
+            <div class="bar-segment low"
+                 [style.width.%]="getPercent(comparisonResult.static.priorityDistribution['LOW'], comparisonResult.batchSize)">
+              <span *ngIf="comparisonResult.static.priorityDistribution['LOW']">LOW: {{ comparisonResult.static.priorityDistribution['LOW'] }}</span>
+            </div>
+          </div>
         </div>
-        <div class="metric-box">
-          <span class="metric-label">QoS Mode Executed</span>
-          <span class="metric-value text-highlight">{{ testResult.modeUsed | uppercase }}</span>
+
+        <!-- Adaptive Bar -->
+        <div class="policy-bar-row highlight-row">
+          <div class="row-label">
+            <span class="policy-tag-badge adaptive">Adaptive ML (Proposed)</span>
+            <span class="sub-label text-primary">Mean: <strong>{{ comparisonResult.adaptive.avgDecisionLatencyUs }} &mu;s</strong></span>
+          </div>
+          <div class="stacked-bar">
+            <div class="bar-segment critical"
+                 [style.width.%]="getPercent(comparisonResult.adaptive.priorityDistribution['CRITICAL'], comparisonResult.batchSize)">
+              <span *ngIf="comparisonResult.adaptive.priorityDistribution['CRITICAL']">CRIT: {{ comparisonResult.adaptive.priorityDistribution['CRITICAL'] }}</span>
+            </div>
+            <div class="bar-segment high"
+                 [style.width.%]="getPercent(comparisonResult.adaptive.priorityDistribution['HIGH'], comparisonResult.batchSize)">
+              <span *ngIf="comparisonResult.adaptive.priorityDistribution['HIGH']">HIGH: {{ comparisonResult.adaptive.priorityDistribution['HIGH'] }}</span>
+            </div>
+            <div class="bar-segment standard"
+                 [style.width.%]="getPercent(comparisonResult.adaptive.priorityDistribution['STANDARD'], comparisonResult.batchSize)">
+              <span *ngIf="comparisonResult.adaptive.priorityDistribution['STANDARD']">STD: {{ comparisonResult.adaptive.priorityDistribution['STANDARD'] }}</span>
+            </div>
+            <div class="bar-segment low"
+                 [style.width.%]="getPercent(comparisonResult.adaptive.priorityDistribution['LOW'], comparisonResult.batchSize)">
+              <span *ngIf="comparisonResult.adaptive.priorityDistribution['LOW']">LOW: {{ comparisonResult.adaptive.priorityDistribution['LOW'] }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-color critical"></span> CRITICAL (P0)</span>
+          <span class="legend-item"><span class="legend-color high"></span> HIGH (P1)</span>
+          <span class="legend-item"><span class="legend-color standard"></span> STANDARD (P2)</span>
+          <span class="legend-item"><span class="legend-color low"></span> LOW (P3)</span>
         </div>
       </div>
 
-      <!-- Priority Distribution -->
-      <div class="distribution-box">
-        <h3>Priority Tier Distribution:</h3>
-        <div class="distribution-tags">
-          <span class="p-badge critical">CRITICAL: {{ testResult.priorityDistribution['CRITICAL'] || 0 }}</span>
-          <span class="p-badge high">HIGH: {{ testResult.priorityDistribution['HIGH'] || 0 }}</span>
-          <span class="p-badge standard">STANDARD: {{ testResult.priorityDistribution['STANDARD'] || 0 }}</span>
-          <span class="p-badge low">LOW: {{ testResult.priorityDistribution['LOW'] || 0 }}</span>
-        </div>
-      </div>
-
-      <!-- Detailed Results Table -->
-      <div class="table-responsive">
-        <table class="results-table">
+      <!-- Side-by-Side Summary Comparison Table -->
+      <div class="summary-table-wrap">
+        <table class="comparison-summary-table">
           <thead>
             <tr>
-              <th>Transaction ID</th>
-              <th>Assigned Priority</th>
-              <th>Score</th>
-              <th>Decision Latency</th>
-              <th>Reason / Rule</th>
-              <th>Status</th>
+              <th>Evaluation Parameter</th>
+              <th>FIFO Baseline</th>
+              <th>Static Rules</th>
+              <th class="col-highlight">Adaptive ML (Proposed)</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of testResult.sampleResults">
-              <td class="font-mono">{{ item.id | slice:0:13 }}...</td>
-              <td>
-                <span class="p-badge" [ngClass]="getPriorityClass(item.priority)">
-                  {{ item.priority }}
-                </span>
-              </td>
-              <td>{{ item.score | number:'1.2-2' }}</td>
-              <td><strong>{{ item.decisionLatencyUs }} μs</strong></td>
-              <td class="reason-cell">{{ item.reason }}</td>
-              <td><span class="status-accepted">ACCEPTED</span></td>
+            <tr>
+              <td class="font-semibold">Mean Decision Latency</td>
+              <td class="font-mono">{{ comparisonResult.fifo.avgDecisionLatencyUs }} &mu;s</td>
+              <td class="font-mono">{{ comparisonResult.static.avgDecisionLatencyUs }} &mu;s</td>
+              <td class="font-mono font-bold text-primary">{{ comparisonResult.adaptive.avgDecisionLatencyUs }} &mu;s</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">CRITICAL Queue Allocation</td>
+              <td class="font-mono">0 (0%)</td>
+              <td class="font-mono">{{ comparisonResult.static.priorityDistribution['CRITICAL'] || 0 }} ({{ getPercent(comparisonResult.static.priorityDistribution['CRITICAL'], comparisonResult.batchSize) }}%)</td>
+              <td class="font-mono font-bold text-danger">{{ comparisonResult.adaptive.priorityDistribution['CRITICAL'] || 0 }} ({{ getPercent(comparisonResult.adaptive.priorityDistribution['CRITICAL'], comparisonResult.batchSize) }}%)</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">HIGH Queue Allocation</td>
+              <td class="font-mono">0 (0%)</td>
+              <td class="font-mono">0 (0%)</td>
+              <td class="font-mono font-bold text-warn">{{ comparisonResult.adaptive.priorityDistribution['HIGH'] || 0 }} ({{ getPercent(comparisonResult.adaptive.priorityDistribution['HIGH'], comparisonResult.batchSize) }}%)</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">STANDARD Queue Allocation</td>
+              <td class="font-mono">{{ comparisonResult.fifo.priorityDistribution['STANDARD'] || 0 }} (100%)</td>
+              <td class="font-mono">0 (0%)</td>
+              <td class="font-mono font-bold text-info">{{ comparisonResult.adaptive.priorityDistribution['STANDARD'] || 0 }} ({{ getPercent(comparisonResult.adaptive.priorityDistribution['STANDARD'], comparisonResult.batchSize) }}%)</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">LOW Queue Allocation</td>
+              <td class="font-mono">0 (0%)</td>
+              <td class="font-mono">{{ comparisonResult.static.priorityDistribution['LOW'] || 0 }} ({{ getPercent(comparisonResult.static.priorityDistribution['LOW'], comparisonResult.batchSize) }}%)</td>
+              <td class="font-mono font-bold">{{ comparisonResult.adaptive.priorityDistribution['LOW'] || 0 }} ({{ getPercent(comparisonResult.adaptive.priorityDistribution['LOW'], comparisonResult.batchSize) }}%)</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Hardware Telemetry Feedback</td>
+              <td><span class="badge-neg">None (Blind)</span></td>
+              <td><span class="badge-neg">None (Blind)</span></td>
+              <td><span class="badge-pos">Active (CPU, Lag, HikariCP)</span></td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Anti-Starvation Protection</td>
+              <td><span class="badge-neu">Natural FIFO</span></td>
+              <td><span class="badge-neg">Severe (Low never runs)</span></td>
+              <td><span class="badge-pos">Active (Retry Count Aging)</span></td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
-  </main>
-</div>
-<div class="dashboard-container">
-  <!-- Header -->
-  <header class="dashboard-header">
-    <div class="header-content">
-      <div class="brand">
-        <div class="angular-logo">
-          <svg viewBox="0 0 250 250" width="36" height="36">
-            <polygon points="125,30 125,30 125,30 31.9,63.2 46.1,186.3 125,230 125,230 125,230 203.9,186.3 218.1,63.2" fill="#DD0031"/>
-            <polygon points="125,30 125,52.2 125,52.1 125,153.4 125,153.4 125,230 203.9,186.3 218.1,63.2" fill="#C3002F"/>
-            <path d="M125,52.1 L66.8,182.6 L91.7,182.6 L103.5,153.1 L146.3,153.1 L158.2,182.6 L183.1,182.6 L125,52.1 Z M113,129.5 L125,100.5 L136.9,129.5 L113,129.5 Z" fill="#FFFFFF"/>
-          </svg>
-        </div>
+
+    <!-- SECTION 4: Single Batch Detailed Analytics Table -->
+    <section class="console-section" *ngIf="testResult">
+      <div class="section-header">
         <div>
-          <h1>Adaptive QoS System Admin Panel</h1>
-          <p class="subtitle">Distributed Message Broker QoS Control & Test Bench (Angular 18)</p>
+          <h2 class="section-title">Single Run Execution Log</h2>
+          <p class="section-desc">Mode: <code>{{ testResult.modeUsed | uppercase }}</code> &bull; Processed: {{ testResult.totalTransactions }} transactions</p>
         </div>
       </div>
 
-      <div class="status-indicator" [ngClass]="connectionStatus.toLowerCase()">
-        <span class="status-dot"></span>
-        <span class="status-text">Gateway: {{ connectionStatus }}</span>
-        <button class="btn-refresh" (click)="checkHealthAndFetchMode()">🔄 Refresh</button>
-      </div>
-    </div>
-  </header>
+      <!-- Telemetry Stats Strip -->
+      <div class="metrics-strip">
+        <div class="metric-cell">
+          <span class="metric-key">Processed Volume</span>
+          <div class="metric-number">{{ testResult.totalTransactions | number }} <span class="metric-unit">tx</span></div>
+        </div>
 
-  <!-- Error alert -->
-  <div class="alert alert-danger" *ngIf="errorMessage">
-    ⚠️ {{ errorMessage }}
-  </div>
+        <div class="metric-cell primary-cell" *ngIf="testResult.throughputRps">
+          <span class="metric-key">Throughput</span>
+          <div class="metric-number">{{ testResult.throughputRps | number:'1.0-0' }} <span class="metric-unit">RPS</span></div>
+        </div>
 
-  <main class="dashboard-main">
-    <!-- Section 1: QoS Dispatch Mode Selection -->
-    <section class="card qos-mode-section">
-      <div class="card-header">
-        <h2>⚡ Live QoS Dispatcher Mode Selection</h2>
-        <span class="active-mode-tag">Current Mode: <strong>{{ currentMode | uppercase }}</strong></span>
-      </div>
+        <div class="metric-cell" *ngIf="testResult.durationSeconds">
+          <span class="metric-key">Total Duration</span>
+          <div class="metric-number">{{ testResult.durationSeconds }} <span class="metric-unit">s</span></div>
+        </div>
 
-      <div class="mode-grid">
-        <!-- Adaptive ML Card -->
-        <div class="mode-card" [class.selected]="currentMode.toLowerCase() === 'adaptive'" (click)="setQosMode('adaptive')">
-          <div class="mode-icon green">🤖</div>
-          <h3>Adaptive ML</h3>
-          <p class="mode-desc">
-            gRPC ML Decision Tree classifier. Dynamic SLA protection using telemetry (CPU, Lag, Latency).
-          </p>
-          <div class="mode-badges">
-            <span class="badge">Dynamic SLA</span>
-            <span class="badge">gRPC ML</span>
-            <span class="badge">Telemetry-Aware</span>
+        <div class="metric-cell">
+          <span class="metric-key">Mean Decision Latency</span>
+          <div class="metric-number">{{ testResult.avgDecisionLatencyUs }} <span class="metric-unit">&mu;s</span></div>
+        </div>
+
+        <div class="metric-cell" *ngIf="testResult.p99LatencyUs">
+          <span class="metric-key">Tail Latency (P99)</span>
+          <div class="metric-number">{{ testResult.p99LatencyUs }} <span class="metric-unit">&mu;s</span></div>
+        </div>
+
+        <div class="metric-cell">
+          <span class="metric-key">Queue Distribution</span>
+          <div class="distribution-row">
+            <span class="tier-chip critical">CRIT: {{ testResult.priorityDistribution['CRITICAL'] || 0 }}</span>
+            <span class="tier-chip high">HIGH: {{ testResult.priorityDistribution['HIGH'] || 0 }}</span>
+            <span class="tier-chip standard">STD: {{ testResult.priorityDistribution['STANDARD'] || 0 }}</span>
+            <span class="tier-chip low">LOW: {{ testResult.priorityDistribution['LOW'] || 0 }}</span>
           </div>
-          <button class="btn-select" [disabled]="loadingMode">
-            {{ currentMode.toLowerCase() === 'adaptive' ? '✓ Active Mode' : 'Select Adaptive' }}
-          </button>
-        </div>
-
-        <!-- Static Priority Card -->
-        <div class="mode-card" [class.selected]="currentMode.toLowerCase() === 'static'" (click)="setQosMode('static')">
-          <div class="mode-icon blue">📋</div>
-          <h3>Static Priority</h3>
-          <p class="mode-desc">
-            Fixed business rules. PAYMENT → CRITICAL, all other types → LOW. Oblivious to CPU/Lag degradation.
-          </p>
-          <div class="mode-badges">
-            <span class="badge">Static Rules</span>
-            <span class="badge">Type-Based</span>
-          </div>
-          <button class="btn-select" [disabled]="loadingMode">
-            {{ currentMode.toLowerCase() === 'static' ? '✓ Active Mode' : 'Select Static' }}
-          </button>
-        </div>
-
-        <!-- FIFO Card -->
-        <div class="mode-card" [class.selected]="currentMode.toLowerCase() === 'fifo'" (click)="setQosMode('fifo')">
-          <div class="mode-icon gray">⏳</div>
-          <h3>FIFO</h3>
-          <p class="mode-desc">
-            Standard single-tier message queueing. All messages routed to STANDARD topic without priority.
-          </p>
-          <div class="mode-badges">
-            <span class="badge">No Priority</span>
-            <span class="badge">Baseline</span>
-          </div>
-          <button class="btn-select" [disabled]="loadingMode">
-            {{ currentMode.toLowerCase() === 'fifo' ? '✓ Active Mode' : 'Select FIFO' }}
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 2: Benchmark Test Execution -->
-    <section class="card test-runner-section">
-      <div class="card-header">
-        <h2>🧪 Live Stress & Benchmark Test Runner</h2>
-      </div>
-
-      <div class="test-form">
-        <div class="form-group">
-          <label for="testCount">Transaction Batch Count:</label>
-          <select id="testCount" [(ngModel)]="testCount">
-            <option [ngValue]="10">10 Transactions</option>
-            <option [ngValue]="20">20 Transactions</option>
-            <option [ngValue]="50">50 Transactions</option>
-            <option [ngValue]="100">100 Transactions</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="testType">Transaction Type Mix:</label>
-          <select id="testType" [(ngModel)]="testType">
-            <option value="MIXED">MIXED (Random Real-world Workload)</option>
-            <option value="PAYMENT">PAYMENT Only</option>
-            <option value="REFUND">REFUND Only</option>
-            <option value="BALANCE_UPDATE">BALANCE_UPDATE Only</option>
-            <option value="HEALTH_CHECK">HEALTH_CHECK Only</option>
-          </select>
-        </div>
-
-        <button class="btn-run-test" (click)="runTestBurst()" [disabled]="runningTest || connectionStatus !== 'ONLINE'">
-          <span *ngIf="!runningTest">🚀 Launch Test Burst</span>
-          <span *ngIf="runningTest">⏳ Processing Transactions...</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- Section 3: Test Results & Telemetry Analytics -->
-    <section class="card results-section" *ngIf="testResult">
-      <div class="card-header">
-        <h2>📊 Test Run Results & QoS Analytics</h2>
-        <span class="timestamp">Mode: <strong>{{ testResult.modeUsed | uppercase }}</strong></span>
-      </div>
-
-      <!-- Metrics Row -->
-      <div class="metrics-grid">
-        <div class="metric-box">
-          <span class="metric-label">Total Transactions</span>
-          <span class="metric-value">{{ testResult.totalTransactions }}</span>
-        </div>
-        <div class="metric-box">
-          <span class="metric-label">Avg Decision Latency</span>
-          <span class="metric-value">{{ testResult.avgDecisionLatencyUs }} <small>μs</small></span>
-        </div>
-        <div class="metric-box">
-          <span class="metric-label">QoS Mode Executed</span>
-          <span class="metric-value text-highlight">{{ testResult.modeUsed | uppercase }}</span>
         </div>
       </div>
 
-      <!-- Priority Distribution -->
-      <div class="distribution-box">
-        <h3>Priority Tier Distribution:</h3>
-        <div class="distribution-tags">
-          <span class="p-badge critical">CRITICAL: {{ testResult.priorityDistribution['CRITICAL'] || 0 }}</span>
-          <span class="p-badge high">HIGH: {{ testResult.priorityDistribution['HIGH'] || 0 }}</span>
-          <span class="p-badge standard">STANDARD: {{ testResult.priorityDistribution['STANDARD'] || 0 }}</span>
-          <span class="p-badge low">LOW: {{ testResult.priorityDistribution['LOW'] || 0 }}</span>
-        </div>
-      </div>
-
-      <!-- Detailed Results Table -->
-      <div class="table-responsive">
-        <table class="results-table">
-          <thead>
+      <!-- Detailed Transaction Table -->
+      <div class="data-table-wrapper">
+        <p-table
+          [value]="testResult.sampleResults"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          styleClass="p-datatable-sm"
+          [tableStyle]="{ 'min-width': '100%' }">
+          <ng-template pTemplate="header">
             <tr>
-              <th>Transaction ID</th>
-              <th>Assigned Priority</th>
-              <th>Score</th>
-              <th>Decision Latency</th>
-              <th>Reason / Rule</th>
-              <th>Status</th>
+              <th pSortableColumn="id" style="width: 25%">Transaction ID <p-sortIcon field="id"></p-sortIcon></th>
+              <th pSortableColumn="priority" style="width: 15%">Priority Class <p-sortIcon field="priority"></p-sortIcon></th>
+              <th pSortableColumn="score" style="width: 12%">Confidence <p-sortIcon field="score"></p-sortIcon></th>
+              <th pSortableColumn="decisionLatencyUs" style="width: 16%">Latency (&mu;s) <p-sortIcon field="decisionLatencyUs"></p-sortIcon></th>
+              <th style="width: 22%">Routing Justification</th>
+              <th style="width: 10%">Status</th>
             </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of testResult.sampleResults">
-              <td class="font-mono">{{ item.id | slice:0:13 }}...</td>
+          </ng-template>
+          <ng-template pTemplate="body" let-item>
+            <tr>
+              <td class="font-mono text-muted-dark">{{ item.id }}</td>
               <td>
-                <span class="p-badge" [ngClass]="getPriorityClass(item.priority)">
+                <span class="priority-tag" [ngClass]="item.priority.toLowerCase()">
                   {{ item.priority }}
                 </span>
               </td>
-              <td>{{ item.score | number:'1.2-2' }}</td>
-              <td><strong>{{ item.decisionLatencyUs }} μs</strong></td>
-              <td class="reason-cell">{{ item.reason }}</td>
-              <td><span class="status-accepted">ACCEPTED</span></td>
+              <td class="font-mono">{{ item.score | number:'1.2-2' }}</td>
+              <td class="font-mono font-bold">{{ item.decisionLatencyUs }} &mu;s</td>
+              <td class="justification-cell">{{ item.reason }}</td>
+              <td>
+                <span class="status-pill-ok">ACCEPTED</span>
+              </td>
             </tr>
-          </tbody>
-        </table>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+
+    <!-- SECTION 5: Research & Master's Thesis Experimental Graphs (Chapter 4) -->
+    <section class="console-section gallery-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Experimental Benchmarks & Thesis Graphics (Chapter 4)</h2>
+          <p class="section-desc">Academic 300-DPI evaluation figures generated across 1,000 to 100,000 transaction workloads</p>
+        </div>
+        <div class="gallery-badge">
+          <i class="pi pi-images"></i> 4 Publication Visualizations
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="chart-tab-bar">
+        <button
+          *ngFor="let c of chartsList"
+          type="button"
+          class="chart-tab-btn"
+          [class.active]="activeChart === c.id"
+          (click)="activeChart = c.id">
+          <span class="tab-fig-tag">{{ c.figure }}</span>
+          <span class="tab-label">{{ c.title }}</span>
+        </button>
+      </div>
+
+      <!-- Chart Display Area -->
+      <div class="chart-display-container">
+        <div class="chart-info-header">
+          <div class="chart-info-left">
+            <span class="chart-figure-badge">{{ selectedChart.figure }}</span>
+            <h3 class="chart-title">{{ selectedChart.title }}</h3>
+          </div>
+          <a [href]="selectedChart.file" target="_blank" download class="chart-download-btn">
+            <i class="pi pi-external-link"></i> Full 300-DPI PNG
+          </a>
+        </div>
+
+        <p class="chart-caption">{{ selectedChart.desc }}</p>
+
+        <div class="chart-image-wrap">
+          <img [src]="selectedChart.file" [alt]="selectedChart.title" class="thesis-chart-img" />
+        </div>
       </div>
     </section>
   </main>

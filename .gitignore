@@ -40,8 +40,8 @@ build/
 models/
 !models/.gitkeep
 
-.thesis/
-.thesis/*
-
 thesis/
 thesis/*
+
+admin-dashboard/public/
+admin-dashboard/public/*

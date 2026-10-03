@@ -1,23 +1,38 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0">
   <diagram id="Adaptive_QoS_Architecture" name="Adaptive QoS Architecture">
-    <mxGraphModel dx="1603" dy="793" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+    <mxGraphModel dx="1740" dy="837" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="group-client" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7f7f7;strokeColor=#cccccc;dashed=1;fontColor=#666666;fontSize=14;verticalAlign=top;align=center;" value="Client Layer" vertex="1">
           <mxGeometry height="280" width="430" x="10" y="60" as="geometry" />
         </mxCell>
+        <mxCell id="node-user" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f5f5f5;strokeColor=#333333;fontColor=#212121;" value="Client / User" vertex="1">
+          <mxGeometry height="80" width="40" x="35" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="node-admin-ui" parent="1" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#e53935;fontColor=#212121;rounded=1;gradientColor=#ffcdd2;fontSize=12;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/angular/angular-original.svg&quot; width=&quot;24&quot; height=&quot;24&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Admin Dashboard &amp;amp; Traffic Generator&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: rgb(85, 85, 85);&quot;&gt;(Angular 21 / PrimeNG 21)&lt;br&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="140" width="280" x="130" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-user-admin" edge="1" parent="1" source="node-user" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#333;strokeWidth=1.5;endArrow=classic;" target="node-admin-ui" value="Web UI">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="group-backend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7f7f7;strokeColor=#cccccc;dashed=1;fontColor=#666666;fontSize=14;verticalAlign=top;align=center;" value="Backend Microservices Tier" vertex="1">
           <mxGeometry height="280" width="860" x="480" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="node-gateway" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#4caf50;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#c8e6c9;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Gateway Service&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #555;&quot;&gt;(Java 21 / Spring Boot 3)&lt;/font&gt;" vertex="1">
-          <mxGeometry height="120" width="240" x="25" y="80" as="geometry" />
+        <mxCell id="node-gateway" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#4caf50;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#c8e6c9;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Gateway Service&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: rgb(85, 85, 85);&quot;&gt;(Java 21 / Spring Boot 3)&lt;br&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="140" width="240" x="25" y="70" as="geometry" />
         </mxCell>
-        <mxCell id="node-inference" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#2196f3;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#bbdefb;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Inference Engine&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #555;&quot;&gt;(Python / gRPC Server)&lt;/font&gt;" vertex="1">
-          <mxGeometry height="120" width="240" x="310" y="80" as="geometry" />
+        <mxCell id="node-inference" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#2196f3;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#bbdefb;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Inference Engine&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: rgb(85, 85, 85);&quot;&gt;(Python 3.12 / gRPC Server)&lt;br&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="140" width="240" x="310" y="70" as="geometry" />
         </mxCell>
-        <mxCell id="node-processor" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#4caf50;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#c8e6c9;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Core Processor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #555;&quot;&gt;(Java 21 / Spring Boot 3)&lt;/font&gt;" vertex="1">
-          <mxGeometry height="120" width="240" x="595" y="80" as="geometry" />
+        <mxCell id="node-processor" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#4caf50;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#c8e6c9;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Core Processor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: rgb(85, 85, 85);&quot;&gt;(Java 21 / Spring Boot 3)&lt;br&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="140" width="240" x="595" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-admin-gw" edge="1" parent="1" source="node-admin-ui" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565c0;strokeWidth=2;endArrow=block;endFill=1;" target="node-gateway" value="HTTP REST &lt;br&gt;(Batch)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-gw-inf" edge="1" parent="1" source="node-gateway" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2196f3;strokeWidth=2;endArrow=block;endFill=1;" target="node-inference" value="gRPC">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="group-monitoring" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7f7f7;strokeColor=#cccccc;dashed=1;fontColor=#666666;fontSize=14;verticalAlign=top;align=center;" value="Observability Tier" vertex="1">
           <mxGeometry height="280" width="360" x="1370" y="60" as="geometry" />
@@ -42,21 +57,6 @@
         </mxCell>
         <mxCell id="node-postgres" parent="group-data" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#e8eaf6;strokeColor=#3f51b5;fontColor=#212121;fontSize=12;gradientColor=#c5cae9;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;PostgreSQL DB&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #555;&quot;&gt;(transaction_db)&lt;/font&gt;" vertex="1">
           <mxGeometry height="155" width="240" x="595" y="55" as="geometry" />
-        </mxCell>
-        <mxCell id="edge-user-load" edge="1" parent="1" source="node-user" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#333;strokeWidth=1.5;endArrow=classic;" target="node-load-gen">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="edge-user-admin" edge="1" parent="1" source="node-user" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#333;strokeWidth=1.5;endArrow=classic;" target="node-admin-ui">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="edge-load-gw" edge="1" parent="1" source="node-load-gen" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565c0;strokeWidth=2;endArrow=block;endFill=1;" target="node-gateway" value="HTTP REST">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="edge-admin-gw" edge="1" parent="1" source="node-admin-ui" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e53935;strokeWidth=2;endArrow=block;endFill=1;" target="node-gateway" value="HTTP REST">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="edge-gw-inf" edge="1" parent="1" source="node-gateway" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2196f3;strokeWidth=2;endArrow=block;endFill=1;" target="node-inference" value="gRPC">
-          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="edge-gw-kafka" edge="1" parent="1" source="node-gateway" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#ff9800;strokeWidth=2;endArrow=block;endFill=1;" target="node-kafka" value="Publish">
           <mxGeometry relative="1" as="geometry" />
@@ -116,15 +116,6 @@
               <mxPoint x="625.06" y="620" />
             </Array>
           </mxGeometry>
-        </mxCell>
-        <mxCell id="node-load-gen" parent="1" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e0f2f7;strokeColor=#4db6ac;fontColor=#212121;rounded=1;gradientColor=#b2ebf2;fontSize=12;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg&quot; width=&quot;20&quot; height=&quot;20&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Load Generator&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #555;&quot;&gt;(scripts/load_test.py)&lt;/font&gt;" vertex="1">
-          <mxGeometry height="70" width="275" x="109" y="120" as="geometry" />
-        </mxCell>
-        <mxCell id="node-admin-ui" parent="1" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#e53935;fontColor=#212121;rounded=1;gradientColor=#ffcdd2;fontSize=12;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/angular/angular-original.svg&quot; width=&quot;20&quot; height=&quot;20&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Admin Dashboard (AF)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #555;&quot;&gt;(admin-dashboard / Angular 18)&lt;/font&gt;" vertex="1">
-          <mxGeometry height="70" width="275" x="109" y="215" as="geometry" />
-        </mxCell>
-        <mxCell id="node-user" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f5f5f5;strokeColor=#333333;fontColor=#212121;" value="Load Tester" vertex="1">
-          <mxGeometry height="80" width="40" x="28" y="150" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
