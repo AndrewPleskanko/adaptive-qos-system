@@ -1,10 +1,19 @@
 package org.example.gatewayservice.service;
 
 import com.thesis.proto.Priority;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service
@@ -13,60 +22,122 @@ public class SystemMetricsService {
 
     private static final String METRIC_CPU_KEY = "metrics:cpu";
     private static final String METRIC_MEMORY_KEY = "metrics:memory";
-    private static final double DEFAULT_CPU_USAGE = 30.0;
-    private static final double DEFAULT_MEMORY_USAGE = 40.0;
+    private static final String METRIC_HIKARICP_KEY = "metrics:hikaricp_active";
+    private static final double DEFAULT_CPU_USAGE = 25.0;
+    private static final double DEFAULT_MEMORY_USAGE = 35.0;
+    private static final double DEFAULT_HIKARICP_UTIL = 0.15;
 
     private final RedisTemplate<String, String> redisTemplate;
 
-    public long getConsumerLag() {
+    // Real lag derivative calculation
+    private final AtomicLong lastLag = new AtomicLong(0);
+    private final AtomicLong lastLagTimestamp = new AtomicLong(System.currentTimeMillis());
+
+    // Cached telemetry snapshot (refreshed at max every 100ms to preserve sub-microsecond decision budget)
+    private volatile double cachedCpu = DEFAULT_CPU_USAGE;
+    private volatile double cachedMemory = DEFAULT_MEMORY_USAGE;
+    private volatile double cachedDbPool = DEFAULT_HIKARICP_UTIL;
+    private volatile long cachedLag = 0;
+    private volatile double cachedLagGrowth = 0.0;
+    private volatile long lastRefreshTimestamp = 0;
+    private static final long REFRESH_INTERVAL_MS = 100;
+
+    // Rolling window of recent decision latencies (microseconds) for authentic P99
+    private final Queue<Long> recentDecisionLatenciesUs = new ConcurrentLinkedQueue<>();
+    private static final int MAX_LATENCY_SAMPLES = 500;
+
+    // Background poller for zero-blocking sub-microsecond in-memory reads
+    private ScheduledExecutorService telemetryScheduler;
+
+    @PostConstruct
+    public void startPoller() {
+        telemetryScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "telemetry-bg-poller");
+            t.setDaemon(true);
+            return t;
+        });
+        telemetryScheduler.scheduleAtFixedRate(() -> {
+            try {
+                refreshFromRedis(System.currentTimeMillis());
+            } catch (Throwable t) {
+                log.debug("Telemetry background poller update: {}", t.getMessage());
+            }
+        }, 0, 200, TimeUnit.MILLISECONDS);
+    }
+
+    @PreDestroy
+    public void stopPoller() {
+        if (telemetryScheduler != null) {
+            telemetryScheduler.shutdownNow();
+        }
+    }
+
+    public void recordDecisionLatency(long latencyUs) {
+        recentDecisionLatenciesUs.offer(latencyUs);
+        while (recentDecisionLatenciesUs.size() > MAX_LATENCY_SAMPLES) {
+            recentDecisionLatenciesUs.poll();
+        }
+    }
+
+    private void refreshFromRedis(long now) {
         try {
-            long total = 0;
+            String cpuVal = redisTemplate.opsForValue().get(METRIC_CPU_KEY);
+            cachedCpu = cpuVal != null ? Double.parseDouble(cpuVal) : DEFAULT_CPU_USAGE;
+
+            String memVal = redisTemplate.opsForValue().get(METRIC_MEMORY_KEY);
+            cachedMemory = memVal != null ? Double.parseDouble(memVal) : DEFAULT_MEMORY_USAGE;
+
+            String poolVal = redisTemplate.opsForValue().get(METRIC_HIKARICP_KEY);
+            cachedDbPool = poolVal != null ? Double.parseDouble(poolVal) : DEFAULT_HIKARICP_UTIL;
+
+            long totalLag = 0;
             for (Priority priority : Priority.values()) {
-                if (priority == com.thesis.proto.Priority.UNRECOGNIZED) continue;
+                if (priority == Priority.UNRECOGNIZED) continue;
                 String val = redisTemplate.opsForValue().get("processed:" + priority.name());
                 if (val != null) {
-                    total += Long.parseLong(val);
+                    totalLag += Long.parseLong(val);
                 }
             }
-            return total;
+            cachedLag = totalLag;
+
+            long prevLag = lastLag.getAndSet(totalLag);
+            long prevTime = lastLagTimestamp.getAndSet(now);
+            long deltaMs = Math.max(now - prevTime, 1);
+            double ratePerSec = ((double) (totalLag - prevLag) / deltaMs) * 1000.0;
+            cachedLagGrowth = Math.round(ratePerSec * 10.0) / 10.0;
         } catch (Exception e) {
-            log.warn("Could not read consumer lag from Redis: {}", e.getMessage());
-            return 0L;
+            log.debug("Telemetry refresh error: {}", e.getMessage());
         }
+    }
+
+    public long getConsumerLag() {
+        return cachedLag;
     }
 
     public double getCpuUsage() {
-        try {
-            String val = redisTemplate.opsForValue().get(METRIC_CPU_KEY);
-            return val != null ? Double.parseDouble(val) : DEFAULT_CPU_USAGE;
-        } catch (Exception e) {
-            return DEFAULT_CPU_USAGE;
-        }
+        return cachedCpu;
     }
 
     public double getMemoryUsage() {
-        try {
-            String val = redisTemplate.opsForValue().get(METRIC_MEMORY_KEY);
-            return val != null ? Double.parseDouble(val) : DEFAULT_MEMORY_USAGE;
-        } catch (Exception e) {
-            return DEFAULT_MEMORY_USAGE;
-        }
+        return cachedMemory;
     }
 
     public double getLagGrowthRate() {
-        double baseRate = (Math.random() * 20.0) - 5.0;
-        return Math.round(baseRate * 100.0) / 100.0;
+        return cachedLagGrowth;
     }
 
     public double getDbPoolActive() {
-        double utilization = 0.1 + (Math.random() * 0.75);
-        return Math.round(utilization * 1000.0) / 1000.0;
+        return cachedDbPool;
     }
 
     public double getRecentP99Latency() {
-        double cpu = getCpuUsage();
-        double baseLatency = 12.0 + (cpu * 0.4) + (Math.random() * 5.0);
-        return Math.round(baseLatency * 10.0) / 10.0;
+        if (recentDecisionLatenciesUs.isEmpty()) {
+            return 2.5;
+        }
+        List<Long> samples = new ArrayList<>(recentDecisionLatenciesUs);
+        Collections.sort(samples);
+        int p99Idx = (int) (samples.size() * 0.99);
+        long p99Us = samples.get(Math.min(p99Idx, samples.size() - 1));
+        return Math.round((p99Us / 1000.0) * 100.0) / 100.0;
     }
-
 }

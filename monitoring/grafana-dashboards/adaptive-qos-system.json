@@ -1,0 +1,863 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "title": "Ключові показники ефективності QoS (Real-time Key Performance Indicators)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": ""
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#64748b",
+                "value": null
+              },
+              {
+                "color": "#3b82f6",
+                "value": 1
+              },
+              {
+                "color": "#10b981",
+                "value": 500
+              },
+              {
+                "color": "#059669",
+                "value": 2000
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"gateway-service\"}[1m])) or vector(0)",
+          "instant": false,
+          "legendFormat": "Поточний RPS",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Пропускна здатність (RPS)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": ""
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#10b981",
+                "value": null
+              },
+              {
+                "color": "#f59e0b",
+                "value": 50
+              },
+              {
+                "color": "#ef4444",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "(histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=\"gateway-service\"}[1m])) by (le)) * 1000) or vector(0)",
+          "instant": false,
+          "legendFormat": "Хвостова затримка P99",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Хвостова затримка P99 (SLA поріг: 100 мс)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": ""
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#10b981",
+                "value": null
+              },
+              {
+                "color": "#f59e0b",
+                "value": 20
+              },
+              {
+                "color": "#ef4444",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "((sum(rate(http_server_requests_seconds_sum{job=\"gateway-service\"}[1m])) / sum(rate(http_server_requests_seconds_count{job=\"gateway-service\"}[1m]))) * 1000) or vector(0)",
+          "instant": false,
+          "legendFormat": "Середня затримка",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Середня затримка шлюзу (Mean Latency)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": ""
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#3b82f6",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "sum(http_server_requests_seconds_count{job=\"gateway-service\"}) or vector(0)",
+          "instant": false,
+          "legendFormat": "Всього запитів",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Всього оброблено транзакцій",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 101,
+      "title": "Динаміка пропускної здатності та затримок (Throughput & Latency Dynamics)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": ""
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "spanNulls": false,
+            "showPoints": "auto"
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "sum by (uri) (rate(http_server_requests_seconds_count{job=\"gateway-service\"}[30s]))",
+          "legendFormat": "Ендпоінт: {{uri}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Інтенсивність вхідного потоку за ендпоінтами (RPS)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": ""
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "showPoints": "auto"
+          },
+          "unit": "ms"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Поріг SLA (100 мс)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#ef4444",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    5,
+                    5
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{job=\"gateway-service\"}[1m])) by (le)) * 1000",
+          "legendFormat": "Медіана P50",
+          "refId": "P50"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=\"gateway-service\"}[1m])) by (le)) * 1000",
+          "legendFormat": "Перцентиль P95",
+          "refId": "P95"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=\"gateway-service\"}[1m])) by (le)) * 1000",
+          "legendFormat": "Хвостова затримка P99",
+          "refId": "P99"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "vector(100)",
+          "legendFormat": "Поріг SLA (100 мс)",
+          "refId": "SLA"
+        }
+      ],
+      "title": "Перцентилі затримки обробки (P50, P95, P99 проти SLA 100 мс)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 102,
+      "title": "Телеметрія обчислювальних ресурсів інфраструктури (Hardware & JVM Telemetry)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": ""
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 12
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 15
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "system_cpu_usage{job=~\"gateway-service|core-processor\"}",
+          "legendFormat": "{{job}} CPU",
+          "refId": "A"
+        }
+      ],
+      "title": "Завантаження процесора (CPU Utilization)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": ""
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 15
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "jvm_memory_used_bytes{area=\"heap\", job=~\"gateway-service|core-processor\"}",
+          "legendFormat": "{{job}} Heap Used",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "jvm_memory_max_bytes{area=\"heap\", job=~\"gateway-service|core-processor\"}",
+          "legendFormat": "{{job}} Heap Max",
+          "refId": "B"
+        }
+      ],
+      "title": "Використання оперативної пам'яті (JVM Heap Memory)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": ""
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 15
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "hikaricp_connections_active{job=\"core-processor\"} or vector(0)",
+          "legendFormat": "Активні з'єднання БД",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "hikaricp_connections_idle{job=\"core-processor\"} or vector(10)",
+          "legendFormat": "Вільні з'єднання БД",
+          "refId": "B"
+        }
+      ],
+      "title": "Пул підключень до PostgreSQL (HikariCP Active/Idle)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "id": 103,
+      "title": "Статус вузлів та потоків комплексу (System Node Status & Health)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": ""
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "#ef4444",
+                  "text": "DOWN"
+                },
+                "1": {
+                  "color": "#10b981",
+                  "text": "HEALTHY / UP"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#ef4444",
+                "value": null
+              },
+              {
+                "color": "#10b981",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "up",
+          "instant": true,
+          "legendFormat": "{{job}} ({{instance}})",
+          "refId": "A"
+        }
+      ],
+      "title": "Статус доступності мікросервісів у Prometheus (Health Check)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": ""
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": ""
+          },
+          "editorMode": "code",
+          "expr": "jvm_threads_live_threads{job=~\"gateway-service|core-processor\"}",
+          "legendFormat": "{{job}} Живих потоків",
+          "refId": "A"
+        }
+      ],
+      "title": "Активні потоки JVM (Live Threads)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "qos",
+    "transactions",
+    "spring-boot",
+    "thesis",
+    "kpi"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Prometheus",
+          "value": "prometheus"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Джерело даних",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "1s",
+      "5s",
+      "10s",
+      "30s",
+      "1m"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Adaptive QoS System — Комплексний моніторинг (Master's Thesis)",
+  "uid": "adaptive-qos-overview",
+  "version": 1
+}

@@ -7,31 +7,31 @@
       </div>
       <div>
         <div class="app-title-row">
-          <h1 class="app-title">Adaptive QoS System</h1>
-          <span class="version-tag">v2.0-SNAPSHOT</span>
+          <h1 class="app-title">Система адаптивної пріоритезації черг</h1>
+          <span class="version-tag">Версія 2.0</span>
         </div>
-        <p class="app-subtitle">Message Broker Telemetry & Dynamic Flow Control Console</p>
+        <p class="app-subtitle">Консоль моніторингу телеметрії та динамічного керування транзакційними чергами</p>
       </div>
     </div>
 
     <div class="topbar-right">
       <div class="status-indicator">
         <span class="status-dot" [ngClass]="connectionStatus.toLowerCase()"></span>
-        <span class="status-label">Gateway: {{ connectionStatus }}</span>
+        <span class="status-label">Вхідний шлюз: {{ connectionStatus === 'ONLINE' ? 'В МЕРЕЖІ' : (connectionStatus === 'OFFLINE' ? 'ВІДКЛЮЧЕНО' : 'ПЕРЕВІРКА') }}</span>
       </div>
 
       <div class="tool-links">
-        <a href="http://localhost:8090" target="_blank" class="nav-link-btn" title="Open Apache Kafka Web UI">
-          <i class="pi pi-list"></i> Kafka UI
+        <a href="http://localhost:8090" target="_blank" class="nav-link-btn" title="Відкрити панель Apache Kafka">
+          <i class="pi pi-list"></i> Веб-інтерфейс Kafka
         </a>
-        <a href="http://localhost:3000" target="_blank" class="nav-link-btn" title="Open Grafana Dashboards">
-          <i class="pi pi-chart-line"></i> Grafana
+        <a href="http://localhost:3000" target="_blank" class="nav-link-btn" title="Відкрити дашборди Grafana">
+          <i class="pi pi-chart-line"></i> Панель Grafana
         </a>
       </div>
 
       <p-button
         icon="pi pi-refresh"
-        label="Refresh"
+        label="Оновити"
         [outlined]="true"
         size="small"
         severity="secondary"
@@ -47,15 +47,40 @@
   </div>
 
   <main class="dashboard-body">
-    <!-- SECTION 1: QoS Dispatch Mode Switcher -->
-    <section class="console-section">
+    <!-- Main Navigation Tabs -->
+    <nav class="nav-tab-bar">
+      <button
+        type="button"
+        class="nav-tab-item"
+        [class.active]="activeTab === 'control'"
+        (click)="activeTab = 'control'">
+        <i class="pi pi-sliders-h"></i>
+        <span>Панель керування та моніторинг</span>
+        <span class="tab-badge" *ngIf="activeTab === 'control'">АКТИВНО</span>
+      </button>
+
+      <button
+        type="button"
+        class="nav-tab-item"
+        [class.active]="activeTab === 'formulas'"
+        (click)="activeTab = 'formulas'">
+        <i class="pi pi-calculator"></i>
+        <span>Математична модель та алгоритми (Формули)</span>
+        <span class="tab-badge" *ngIf="activeTab === 'formulas'">АКТИВНО</span>
+      </button>
+    </nav>
+
+    <!-- TAB 1: Control & Monitoring Console -->
+    <ng-container *ngIf="activeTab === 'control'">
+      <!-- SECTION 1: QoS Dispatch Mode Switcher -->
+      <section class="console-section">
       <div class="section-header">
         <div>
-          <h2 class="section-title">Dispatch Policy Configuration</h2>
-          <p class="section-desc">Select active routing and QoS classification policy on Gateway Service</p>
+          <h2 class="section-title">Конфігурація дисципліни обслуговування черг</h2>
+          <p class="section-desc">Вибір активного алгоритму маршрутизації та класифікації транзакцій на вхідному шлюзі</p>
         </div>
         <div class="active-policy-badge">
-          Active: <code>{{ currentMode | uppercase }}</code>
+          Активна дисципліна: <code>{{ getModeUkrainianLabel(currentMode) }}</code>
         </div>
       </div>
 
@@ -68,22 +93,22 @@
           <div class="policy-card-header">
             <div class="policy-name">
               <span class="radio-indicator"></span>
-              <strong>Adaptive ML</strong>
+              <strong>Адаптивний QoS (Запропонований метод)</strong>
             </div>
             <p-tag
               *ngIf="currentMode.toLowerCase() === 'adaptive'"
-              value="ACTIVE"
+              value="АКТИВНО"
               severity="success"
               styleClass="compact-tag">
             </p-tag>
           </div>
           <p class="policy-summary">
-            Multi-signal CART classifier compiled into native decision branches. Uses CPU, Kafka lag growth rate, HikariCP saturation, and rolling P99 latency.
+            Багатокритеріальний класифікатор на основі дерева рішень CART, скомпільованого в прямі машинні інструкції розгалуження (підхід Tree-to-Code). Враховує телеметрію процесора, динаміку наростання черги, стан пулу бази даних та затримку P99.
           </p>
           <div class="policy-meta">
-            <span class="meta-item">Dynamic Threshold &theta;(t)</span>
-            <span class="meta-item">&lt;100&mu;s Decision</span>
-            <span class="meta-item">4-Tier Routing</span>
+            <span class="meta-item">Динамічний поріг &theta;(t)</span>
+            <span class="meta-item">Час висновку &lt; 1 мкс</span>
+            <span class="meta-item">4 класи черг</span>
           </div>
         </div>
 
@@ -95,21 +120,21 @@
           <div class="policy-card-header">
             <div class="policy-name">
               <span class="radio-indicator"></span>
-              <strong>Static Rules</strong>
+              <strong>Статичні правила</strong>
             </div>
             <p-tag
               *ngIf="currentMode.toLowerCase() === 'static'"
-              value="ACTIVE"
+              value="АКТИВНО"
               severity="info"
               styleClass="compact-tag">
             </p-tag>
           </div>
           <p class="policy-summary">
-            Heuristic type-based dispatch. Maps PAYMENT to CRITICAL and all secondary transaction types to LOW. Oblivious to infrastructure load and worker exhaustion.
+            Евристична маршрутизація виключно за типом операції. Спрямовує платежі у найвищий клас CRITICAL, а всі інші типи операцій — у чергу LOW. Ігнорує поточне навантаження процесорів і стан пулу підключень бази даних.
           </p>
           <div class="policy-meta">
-            <span class="meta-item">Fixed Type Map</span>
-            <span class="meta-item">No Telemetry Feedback</span>
+            <span class="meta-item">Фіксовані правила</span>
+            <span class="meta-item">Без телеметрії стану</span>
           </div>
         </div>
 
@@ -121,21 +146,21 @@
           <div class="policy-card-header">
             <div class="policy-name">
               <span class="radio-indicator"></span>
-              <strong>FIFO Baseline</strong>
+              <strong>Базова черга (FIFO)</strong>
             </div>
             <p-tag
               *ngIf="currentMode.toLowerCase() === 'fifo'"
-              value="ACTIVE"
+              value="АКТИВНО"
               severity="secondary"
               styleClass="compact-tag">
             </p-tag>
           </div>
           <p class="policy-summary">
-            Standard single-tier queuing baseline. All incoming transactions are published into standard queue without priority evaluation. Head-of-line blocking under burst.
+            Класична недиференційована черга в порядку надходження. Усі вхідні транзакції публікуються в єдиний канал без оцінки пріоритетності. Спричиняє блокування початку черги під час пікових сплесків навантаження.
           </p>
           <div class="policy-meta">
-            <span class="meta-item">Single Topic</span>
-            <span class="meta-item">Reference Benchmark</span>
+            <span class="meta-item">Єдина черга</span>
+            <span class="meta-item">Базове порівняння</span>
           </div>
         </div>
       </div>
@@ -145,17 +170,20 @@
     <section class="console-section">
       <div class="section-header">
         <div>
-          <h2 class="section-title">Traffic Generator & Micro-Benchmark</h2>
-          <p class="section-desc">Generate synthetic transaction workloads to evaluate decision latency and priority distribution</p>
+          <h2 class="section-title">Оцінювання та валідація характеристик затримки</h2>
+          <p class="section-desc">
+            Вибір режиму виконання: прямий локальний замір класифікації у пам'яті або імітаційне моделювання за теорією черг M/G/m
+          </p>
         </div>
       </div>
 
       <div class="control-toolbar">
         <div class="toolbar-group">
-          <label class="control-label">Batch Size</label>
+          <label class="control-label">Режим оцінювання</label>
           <p-select
-            [options]="countOptions"
-            [(ngModel)]="testCount"
+            [options]="modeOptions"
+            [(ngModel)]="executionMode"
+            (onChange)="onExecutionModeChange()"
             optionLabel="label"
             optionValue="value"
             styleClass="compact-select">
@@ -163,10 +191,23 @@
         </div>
 
         <div class="toolbar-group">
-          <label class="control-label">Workload Profile</label>
+          <label class="control-label">Обсяг вибірки</label>
+          <p-select
+            [options]="currentCountOptions"
+            [(ngModel)]="testCount"
+            (onChange)="onParameterChange()"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="compact-select">
+          </p-select>
+        </div>
+
+        <div class="toolbar-group">
+          <label class="control-label">Профіль навантаження</label>
           <p-select
             [options]="typeOptions"
             [(ngModel)]="testType"
+            (onChange)="onParameterChange()"
             optionLabel="label"
             optionValue="value"
             styleClass="compact-select">
@@ -175,22 +216,20 @@
 
         <div class="toolbar-action">
           <p-button
-            label="Execute Active Mode"
-            icon="pi pi-play"
+            label="Виконати замір"
             size="small"
             severity="primary"
             [loading]="runningTest"
-            [disabled]="runningTest || runningComparison || connectionStatus !== 'ONLINE'"
+            [disabled]="runningTest || runningComparison"
             (onClick)="runTestBurst()">
           </p-button>
 
           <p-button
-            label="Compare All 3 Modes Side-by-Side"
-            icon="pi pi-chart-bar"
+            label="Порівняти 3 політики"
             size="small"
             severity="contrast"
             [loading]="runningComparison"
-            [disabled]="runningTest || runningComparison || connectionStatus !== 'ONLINE'"
+            [disabled]="runningTest || runningComparison"
             (onClick)="runComparativeBenchmark()">
           </p-button>
         </div>
@@ -201,28 +240,28 @@
     <section class="console-section comparison-section" *ngIf="comparisonResult">
       <div class="section-header">
         <div>
-          <h2 class="section-title">3-Way Comparative Policy Evaluation</h2>
+          <h2 class="section-title">Порівняльний аналіз трьох дисциплін обслуговування черг</h2>
           <p class="section-desc">
-            Evaluated <strong>{{ comparisonResult.batchSize }} transactions</strong> sequentially across FIFO, Static, and Adaptive QoS dispatchers
+            Оброблено <strong>{{ comparisonResult.batchSize }} транзакцій</strong> послідовно через базову чергу FIFO, статичні правила та запропонований адаптивний метод QoS
           </p>
         </div>
-        <span class="badge-status-ready">Evaluation Complete</span>
+        <span class="badge-status-ready">Оцінювання завершено</span>
       </div>
 
       <!-- Comparative Queue Distribution Visual Bars -->
       <div class="comparison-charts-panel">
-        <h3 class="chart-panel-title">Queue Allocation Breakdown by Policy ({{ comparisonResult.batchSize }} tx)</h3>
+        <h3 class="chart-panel-title">Розподіл навантаження за класами пріоритету (вибірка: {{ comparisonResult.batchSize }} транзакцій)</h3>
 
         <!-- FIFO Bar -->
         <div class="policy-bar-row">
           <div class="row-label">
-            <span class="policy-tag-badge fifo">FIFO Baseline</span>
-            <span class="sub-label">Mean: <strong>{{ comparisonResult.fifo.avgDecisionLatencyUs }} &mu;s</strong></span>
+            <span class="policy-tag-badge fifo">Базова черга FIFO</span>
+            <span class="sub-label">Середній час: <strong>{{ comparisonResult.fifo.avgDecisionLatencyUs }} мкс</strong></span>
           </div>
           <div class="stacked-bar">
             <div class="bar-segment standard"
                  [style.width.%]="getPercent(comparisonResult.fifo.priorityDistribution['STANDARD'], comparisonResult.batchSize)">
-              <span>STANDARD: {{ comparisonResult.fifo.priorityDistribution['STANDARD'] || 0 }} (100%)</span>
+              <span>СТАНДАРТНИЙ (STANDARD): {{ comparisonResult.fifo.priorityDistribution['STANDARD'] || 0 }} (100%)</span>
             </div>
           </div>
         </div>
@@ -230,17 +269,17 @@
         <!-- Static Bar -->
         <div class="policy-bar-row">
           <div class="row-label">
-            <span class="policy-tag-badge static">Static Rules</span>
-            <span class="sub-label">Mean: <strong>{{ comparisonResult.static.avgDecisionLatencyUs }} &mu;s</strong></span>
+            <span class="policy-tag-badge static">Статичні правила</span>
+            <span class="sub-label">Середній час: <strong>{{ comparisonResult.static.avgDecisionLatencyUs }} мкс</strong></span>
           </div>
           <div class="stacked-bar">
             <div class="bar-segment critical"
                  [style.width.%]="getPercent(comparisonResult.static.priorityDistribution['CRITICAL'], comparisonResult.batchSize)">
-              <span *ngIf="comparisonResult.static.priorityDistribution['CRITICAL']">CRITICAL: {{ comparisonResult.static.priorityDistribution['CRITICAL'] }}</span>
+              <span *ngIf="comparisonResult.static.priorityDistribution['CRITICAL']">КРИТИЧНИЙ (CRITICAL): {{ comparisonResult.static.priorityDistribution['CRITICAL'] }}</span>
             </div>
             <div class="bar-segment low"
                  [style.width.%]="getPercent(comparisonResult.static.priorityDistribution['LOW'], comparisonResult.batchSize)">
-              <span *ngIf="comparisonResult.static.priorityDistribution['LOW']">LOW: {{ comparisonResult.static.priorityDistribution['LOW'] }}</span>
+              <span *ngIf="comparisonResult.static.priorityDistribution['LOW']">НИЗЬКИЙ (LOW): {{ comparisonResult.static.priorityDistribution['LOW'] }}</span>
             </div>
           </div>
         </div>
@@ -248,91 +287,200 @@
         <!-- Adaptive Bar -->
         <div class="policy-bar-row highlight-row">
           <div class="row-label">
-            <span class="policy-tag-badge adaptive">Adaptive ML (Proposed)</span>
-            <span class="sub-label text-primary">Mean: <strong>{{ comparisonResult.adaptive.avgDecisionLatencyUs }} &mu;s</strong></span>
+            <span class="policy-tag-badge adaptive">Адаптивний QoS (Запропонований)</span>
+            <span class="sub-label text-primary">Середній час: <strong>{{ comparisonResult.adaptive.avgDecisionLatencyUs }} мкс</strong></span>
           </div>
           <div class="stacked-bar">
             <div class="bar-segment critical"
                  [style.width.%]="getPercent(comparisonResult.adaptive.priorityDistribution['CRITICAL'], comparisonResult.batchSize)">
-              <span *ngIf="comparisonResult.adaptive.priorityDistribution['CRITICAL']">CRIT: {{ comparisonResult.adaptive.priorityDistribution['CRITICAL'] }}</span>
+              <span *ngIf="comparisonResult.adaptive.priorityDistribution['CRITICAL']">КРИТ: {{ comparisonResult.adaptive.priorityDistribution['CRITICAL'] }}</span>
             </div>
             <div class="bar-segment high"
                  [style.width.%]="getPercent(comparisonResult.adaptive.priorityDistribution['HIGH'], comparisonResult.batchSize)">
-              <span *ngIf="comparisonResult.adaptive.priorityDistribution['HIGH']">HIGH: {{ comparisonResult.adaptive.priorityDistribution['HIGH'] }}</span>
+              <span *ngIf="comparisonResult.adaptive.priorityDistribution['HIGH']">ВИС: {{ comparisonResult.adaptive.priorityDistribution['HIGH'] }}</span>
             </div>
             <div class="bar-segment standard"
                  [style.width.%]="getPercent(comparisonResult.adaptive.priorityDistribution['STANDARD'], comparisonResult.batchSize)">
-              <span *ngIf="comparisonResult.adaptive.priorityDistribution['STANDARD']">STD: {{ comparisonResult.adaptive.priorityDistribution['STANDARD'] }}</span>
+              <span *ngIf="comparisonResult.adaptive.priorityDistribution['STANDARD']">СТД: {{ comparisonResult.adaptive.priorityDistribution['STANDARD'] }}</span>
             </div>
             <div class="bar-segment low"
                  [style.width.%]="getPercent(comparisonResult.adaptive.priorityDistribution['LOW'], comparisonResult.batchSize)">
-              <span *ngIf="comparisonResult.adaptive.priorityDistribution['LOW']">LOW: {{ comparisonResult.adaptive.priorityDistribution['LOW'] }}</span>
+              <span *ngIf="comparisonResult.adaptive.priorityDistribution['LOW']">НИЗ: {{ comparisonResult.adaptive.priorityDistribution['LOW'] }}</span>
             </div>
           </div>
         </div>
 
         <!-- Legend -->
         <div class="chart-legend">
-          <span class="legend-item"><span class="legend-color critical"></span> CRITICAL (P0)</span>
-          <span class="legend-item"><span class="legend-color high"></span> HIGH (P1)</span>
-          <span class="legend-item"><span class="legend-color standard"></span> STANDARD (P2)</span>
-          <span class="legend-item"><span class="legend-color low"></span> LOW (P3)</span>
+          <span class="legend-item"><span class="legend-color critical"></span> Критичний (CRITICAL / P0)</span>
+          <span class="legend-item"><span class="legend-color high"></span> Високий (HIGH / P1)</span>
+          <span class="legend-item"><span class="legend-color standard"></span> Стандартний (STANDARD / P2)</span>
+          <span class="legend-item"><span class="legend-color low"></span> Низький (LOW / P3)</span>
         </div>
+
+
       </div>
 
-      <!-- Side-by-Side Summary Comparison Table -->
-      <div class="summary-table-wrap">
+      <!-- Toggle Button for Comparison Table -->
+      <div style="display: flex; justify-content: center; margin-top: 0.85rem;">
+        <button
+          pButton
+          type="button"
+          [label]="showComparisonTable ? 'Приховати детальну таблицю порівняння' : 'Показати зведену таблицю порівняння метрик'"
+          [icon]="showComparisonTable ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+          class="p-button-outlined p-button-sm p-button-secondary"
+          (click)="showComparisonTable = !showComparisonTable">
+        </button>
+      </div>
+
+      <!-- Side-by-Side Summary Comparison Table (Collapsed by default for presentation) -->
+      <div class="summary-table-wrap" *ngIf="showComparisonTable" style="margin-top: 1rem;">
         <table class="comparison-summary-table">
           <thead>
             <tr>
-              <th>Evaluation Parameter</th>
-              <th>FIFO Baseline</th>
-              <th>Static Rules</th>
-              <th class="col-highlight">Adaptive ML (Proposed)</th>
+              <th>Параметр порівняння</th>
+              <th>Базова черга FIFO</th>
+              <th>Статичні правила</th>
+              <th class="col-highlight">Адаптивний QoS (Запропонований)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="font-semibold">Mean Decision Latency</td>
-              <td class="font-mono">{{ comparisonResult.fifo.avgDecisionLatencyUs }} &mu;s</td>
-              <td class="font-mono">{{ comparisonResult.static.avgDecisionLatencyUs }} &mu;s</td>
-              <td class="font-mono font-bold text-primary">{{ comparisonResult.adaptive.avgDecisionLatencyUs }} &mu;s</td>
+              <td class="font-semibold">Обчислений обсяг вибірки</td>
+              <td class="font-mono font-bold">{{ comparisonResult.batchSize | number }} транз.</td>
+              <td class="font-mono font-bold">{{ comparisonResult.batchSize | number }} транз.</td>
+              <td class="font-mono font-bold text-primary">{{ comparisonResult.batchSize | number }} транз.</td>
             </tr>
             <tr>
-              <td class="font-semibold">CRITICAL Queue Allocation</td>
+              <td class="font-semibold">Пропускна здатність (Throughput)</td>
+              <td class="font-mono font-bold">{{ comparisonResult.fifo.throughputRps | number }} запитів/с</td>
+              <td class="font-mono font-bold">{{ comparisonResult.static.throughputRps | number }} запитів/с</td>
+              <td class="font-mono font-bold text-success">
+                {{ comparisonResult.adaptive.throughputRps | number }} запитів/с
+                <span class="ml-2" [ngClass]="getThroughputBadge().cssClass" *ngIf="getThroughputBadge().text">
+                  {{ getThroughputBadge().text }}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Сумарний час обробки вибірки (Duration)</td>
+              <td class="font-mono">{{ comparisonResult.fifo.durationSeconds }} с</td>
+              <td class="font-mono">{{ comparisonResult.static.durationSeconds }} с</td>
+              <td class="font-mono font-bold text-primary">
+                {{ comparisonResult.adaptive.durationSeconds }} с
+                <span class="ml-2" [ngClass]="getDurationBadge().cssClass" *ngIf="getDurationBadge().text">
+                  {{ getDurationBadge().text }}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Хвостова затримка 99-го перцентиля (P99 Latency)</td>
+              <td class="font-mono text-danger font-bold">{{ getP99Display(comparisonResult.fifo) }}</td>
+              <td class="font-mono font-semibold">{{ getP99Display(comparisonResult.static) }}</td>
+              <td class="font-mono font-bold text-success">
+                {{ getP99Display(comparisonResult.adaptive) }}
+                <span class="ml-2" [ngClass]="getP99Badge().cssClass" *ngIf="getP99Badge().text">
+                  {{ getP99Badge().text }}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Середня затримка класифікації (Decision Latency)</td>
+              <td class="font-mono">{{ formatLatency(comparisonResult.fifo.avgDecisionLatencyUs) }}</td>
+              <td class="font-mono">{{ formatLatency(comparisonResult.static.avgDecisionLatencyUs) }}</td>
+              <td class="font-mono font-bold text-primary">{{ formatLatency(comparisonResult.adaptive.avgDecisionLatencyUs) }}</td>
+            </tr>
+
+            <!-- Per-Class Latency Breakdown Section (P0 – P3) -->
+            <tr class="section-divider-row" style="background: #f8fafc;">
+              <td colspan="4" class="font-bold text-primary" style="padding: 0.5rem 0.85rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em;">
+                &bull; Диференціація затримок за класами черг (P50 / P95 / P99)
+              </td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Клас CRITICAL (P0) — Затримка платежів</td>
+              <td class="font-mono text-muted">
+                {{ getPerClassMetrics('fifo', 'CRITICAL').p99 }}
+                <span class="badge-neu ml-1">{{ getPerClassMetrics('fifo', 'CRITICAL').note }}</span>
+              </td>
+              <td class="font-mono text-warn">
+                {{ getPerClassMetrics('static', 'CRITICAL').p99 }}
+                <span class="badge-neg ml-1">{{ getPerClassMetrics('static', 'CRITICAL').note }}</span>
+              </td>
+              <td class="font-mono font-bold text-danger">
+                {{ getPerClassMetrics('adaptive', 'CRITICAL').p99 }}
+                <span class="badge-pos ml-1">{{ getPerClassMetrics('adaptive', 'CRITICAL').note }}</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Клас HIGH (P1) — Термінові повернення/повтори</td>
+              <td class="font-mono text-muted">{{ getPerClassMetrics('fifo', 'HIGH').p99 }}</td>
+              <td class="font-mono text-muted">{{ getPerClassMetrics('static', 'HIGH').p99 }}</td>
+              <td class="font-mono font-bold text-warn">
+                {{ getPerClassMetrics('adaptive', 'HIGH').p99 }}
+                <span class="badge-neu ml-1">{{ getPerClassMetrics('adaptive', 'HIGH').note }}</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Клас STANDARD (P2) — Базові операції</td>
+              <td class="font-mono">{{ getPerClassMetrics('fifo', 'STANDARD').p99 }}</td>
+              <td class="font-mono text-muted">{{ getPerClassMetrics('static', 'STANDARD').p99 }}</td>
+              <td class="font-mono font-bold text-info">{{ getPerClassMetrics('adaptive', 'STANDARD').p99 }}</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Клас LOW (P3) — Стан фонової черги (Anti-Starvation)</td>
+              <td class="font-mono text-muted">{{ getPerClassMetrics('fifo', 'LOW').p99 }}</td>
+              <td class="font-mono text-danger font-semibold">
+                {{ getPerClassMetrics('static', 'LOW').p99 }}
+                <span class="badge-neg ml-1">{{ getPerClassMetrics('static', 'LOW').note }}</span>
+              </td>
+              <td class="font-mono font-bold">
+                {{ getPerClassMetrics('adaptive', 'LOW').p99 }}
+                <span class="badge-pos ml-1">{{ getPerClassMetrics('adaptive', 'LOW').note }}</span>
+              </td>
+            </tr>
+
+            <!-- Distribution Rows -->
+            <tr class="section-divider-row" style="background: #f8fafc;">
+              <td colspan="4" class="font-bold text-primary" style="padding: 0.5rem 0.85rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em;">
+                &bull; Розподіл трафіку за класами пріоритетів
+              </td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Виділення черги CRITICAL (P0)</td>
               <td class="font-mono">0 (0%)</td>
               <td class="font-mono">{{ comparisonResult.static.priorityDistribution['CRITICAL'] || 0 }} ({{ getPercent(comparisonResult.static.priorityDistribution['CRITICAL'], comparisonResult.batchSize) }}%)</td>
               <td class="font-mono font-bold text-danger">{{ comparisonResult.adaptive.priorityDistribution['CRITICAL'] || 0 }} ({{ getPercent(comparisonResult.adaptive.priorityDistribution['CRITICAL'], comparisonResult.batchSize) }}%)</td>
             </tr>
             <tr>
-              <td class="font-semibold">HIGH Queue Allocation</td>
+              <td class="font-semibold">Виділення черги HIGH (P1)</td>
               <td class="font-mono">0 (0%)</td>
               <td class="font-mono">0 (0%)</td>
               <td class="font-mono font-bold text-warn">{{ comparisonResult.adaptive.priorityDistribution['HIGH'] || 0 }} ({{ getPercent(comparisonResult.adaptive.priorityDistribution['HIGH'], comparisonResult.batchSize) }}%)</td>
             </tr>
             <tr>
-              <td class="font-semibold">STANDARD Queue Allocation</td>
+              <td class="font-semibold">Виділення черги STANDARD (P2)</td>
               <td class="font-mono">{{ comparisonResult.fifo.priorityDistribution['STANDARD'] || 0 }} (100%)</td>
               <td class="font-mono">0 (0%)</td>
               <td class="font-mono font-bold text-info">{{ comparisonResult.adaptive.priorityDistribution['STANDARD'] || 0 }} ({{ getPercent(comparisonResult.adaptive.priorityDistribution['STANDARD'], comparisonResult.batchSize) }}%)</td>
             </tr>
             <tr>
-              <td class="font-semibold">LOW Queue Allocation</td>
+              <td class="font-semibold">Виділення черги LOW (P3)</td>
               <td class="font-mono">0 (0%)</td>
               <td class="font-mono">{{ comparisonResult.static.priorityDistribution['LOW'] || 0 }} ({{ getPercent(comparisonResult.static.priorityDistribution['LOW'], comparisonResult.batchSize) }}%)</td>
               <td class="font-mono font-bold">{{ comparisonResult.adaptive.priorityDistribution['LOW'] || 0 }} ({{ getPercent(comparisonResult.adaptive.priorityDistribution['LOW'], comparisonResult.batchSize) }}%)</td>
             </tr>
             <tr>
-              <td class="font-semibold">Hardware Telemetry Feedback</td>
-              <td><span class="badge-neg">None (Blind)</span></td>
-              <td><span class="badge-neg">None (Blind)</span></td>
-              <td><span class="badge-pos">Active (CPU, Lag, HikariCP)</span></td>
+              <td class="font-semibold">Зворотний зв'язок за апаратним станом</td>
+              <td><span class="badge-neg">Відсутній (сліпе виконання)</span></td>
+              <td><span class="badge-neg">Відсутній (сліпе виконання)</span></td>
+              <td><span class="badge-pos">Активний (CPU, черга Kafka, пул HikariCP)</span></td>
             </tr>
             <tr>
-              <td class="font-semibold">Anti-Starvation Protection</td>
-              <td><span class="badge-neu">Natural FIFO</span></td>
-              <td><span class="badge-neg">Severe (Low never runs)</span></td>
-              <td><span class="badge-pos">Active (Retry Count Aging)</span></td>
+              <td class="font-semibold">Захист від голодування черг (Anti-Starvation)</td>
+              <td><span class="badge-neu">Природний (FIFO)</span></td>
+              <td><span class="badge-neg">Критичний (блокування LOW черги)</span></td>
+              <td><span class="badge-pos">Активний (старіння за лічильником спроб)</span></td>
             </tr>
           </tbody>
         </table>
@@ -340,54 +488,140 @@
     </section>
 
     <!-- SECTION 4: Single Batch Detailed Analytics Table -->
-    <section class="console-section" *ngIf="testResult">
+    <section class="console-section" *ngIf="showSingleRunLog && testResult">
       <div class="section-header">
         <div>
-          <h2 class="section-title">Single Run Execution Log</h2>
-          <p class="section-desc">Mode: <code>{{ testResult.modeUsed | uppercase }}</code> &bull; Processed: {{ testResult.totalTransactions }} transactions</p>
+          <h2 class="section-title">Протокол окремого експериментального прогону</h2>
+          <p class="section-desc">Дисципліна: <code>{{ getModeUkrainianLabel(testResult.modeUsed) }}</code> &bull; Опрацьовано: {{ testResult.totalTransactions }} транзакцій</p>
         </div>
       </div>
 
       <!-- Telemetry Stats Strip -->
       <div class="metrics-strip">
         <div class="metric-cell">
-          <span class="metric-key">Processed Volume</span>
-          <div class="metric-number">{{ testResult.totalTransactions | number }} <span class="metric-unit">tx</span></div>
+          <span class="metric-key">Обсяг вибірки</span>
+          <div class="metric-number">{{ testResult.totalTransactions | number }} <span class="metric-unit">транз.</span></div>
         </div>
 
         <div class="metric-cell primary-cell" *ngIf="testResult.throughputRps">
-          <span class="metric-key">Throughput</span>
-          <div class="metric-number">{{ testResult.throughputRps | number:'1.0-0' }} <span class="metric-unit">RPS</span></div>
+          <span class="metric-key">Пропускна здатність</span>
+          <div class="metric-number">{{ testResult.throughputRps | number:'1.0-0' }} <span class="metric-unit">запитів/с</span></div>
         </div>
 
         <div class="metric-cell" *ngIf="testResult.durationSeconds">
-          <span class="metric-key">Total Duration</span>
-          <div class="metric-number">{{ testResult.durationSeconds }} <span class="metric-unit">s</span></div>
+          <span class="metric-key">Загальний час</span>
+          <div class="metric-number">{{ testResult.durationSeconds }} <span class="metric-unit">с</span></div>
         </div>
 
         <div class="metric-cell">
-          <span class="metric-key">Mean Decision Latency</span>
-          <div class="metric-number">{{ testResult.avgDecisionLatencyUs }} <span class="metric-unit">&mu;s</span></div>
+          <span class="metric-key">Середній час класифікації</span>
+          <div class="metric-number">{{ testResult.avgDecisionLatencyUs }} <span class="metric-unit">мкс</span></div>
         </div>
 
         <div class="metric-cell" *ngIf="testResult.p99LatencyUs">
-          <span class="metric-key">Tail Latency (P99)</span>
-          <div class="metric-number">{{ testResult.p99LatencyUs }} <span class="metric-unit">&mu;s</span></div>
+          <span class="metric-key">Хвостова затримка (P99)</span>
+          <div class="metric-number">{{ testResult.p99LatencyUs }} <span class="metric-unit">мкс</span></div>
         </div>
 
         <div class="metric-cell">
-          <span class="metric-key">Queue Distribution</span>
+          <span class="metric-key">Розподіл за класами черг</span>
           <div class="distribution-row">
-            <span class="tier-chip critical">CRIT: {{ testResult.priorityDistribution['CRITICAL'] || 0 }}</span>
-            <span class="tier-chip high">HIGH: {{ testResult.priorityDistribution['HIGH'] || 0 }}</span>
-            <span class="tier-chip standard">STD: {{ testResult.priorityDistribution['STANDARD'] || 0 }}</span>
-            <span class="tier-chip low">LOW: {{ testResult.priorityDistribution['LOW'] || 0 }}</span>
+            <span class="tier-chip critical">КРИТ: {{ testResult.priorityDistribution['CRITICAL'] || 0 }}</span>
+            <span class="tier-chip high">ВИС: {{ testResult.priorityDistribution['HIGH'] || 0 }}</span>
+            <span class="tier-chip standard">СТД: {{ testResult.priorityDistribution['STANDARD'] || 0 }}</span>
+            <span class="tier-chip low">НИЗ: {{ testResult.priorityDistribution['LOW'] || 0 }}</span>
           </div>
+        </div>
+      </div>
+
+      <!-- Workload Allocation Breakdown Matrix (Type x Priority) -->
+      <div class="matrix-card">
+        <div class="matrix-header">
+          <div class="matrix-title-group">
+            <h3 class="matrix-title">
+              Матриця розподілу навантаження (Тип операції &times; Клас черги)
+            </h3>
+            <p class="matrix-subtitle">
+              Агрегований розподіл потоку транзакцій за класами черг для дисципліни <strong>{{ getModeUkrainianLabel(testResult.modeUsed) }}</strong>
+            </p>
+          </div>
+          <div class="matrix-badge">
+            Усього класифіковано: <strong>{{ testResult.totalTransactions | number }} транз.</strong>
+          </div>
+        </div>
+
+        <div class="matrix-table-wrap">
+          <table class="breakdown-matrix-table">
+            <thead>
+              <tr>
+                <th class="col-type">Тип операції</th>
+                <th class="col-crit">Критичний (P0)</th>
+                <th class="col-high">Високий (P1)</th>
+                <th class="col-std">Стандартний (P2)</th>
+                <th class="col-low">Низький (P3)</th>
+                <th class="col-total">Підсумок за типом</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of getTypeBreakdown(testResult)">
+                <td class="font-bold type-cell">
+                  <span class="type-badge">{{ getTypeUkrainianLabel(row.type) }}</span>
+                </td>
+                <td class="font-mono text-danger font-semibold">
+                  {{ row.critical | number }}
+                  <span class="cell-pct" *ngIf="row.total > 0">({{ getPercent(row.critical, row.total) }}%)</span>
+                </td>
+                <td class="font-mono text-warn font-semibold">
+                  {{ row.high | number }}
+                  <span class="cell-pct" *ngIf="row.total > 0">({{ getPercent(row.high, row.total) }}%)</span>
+                </td>
+                <td class="font-mono text-info font-semibold">
+                  {{ row.standard | number }}
+                  <span class="cell-pct" *ngIf="row.total > 0">({{ getPercent(row.standard, row.total) }}%)</span>
+                </td>
+                <td class="font-mono text-secondary font-semibold">
+                  {{ row.low | number }}
+                  <span class="cell-pct" *ngIf="row.total > 0">({{ getPercent(row.low, row.total) }}%)</span>
+                </td>
+                <td class="font-mono font-bold total-cell">
+                  {{ row.total | number }}
+                  <span class="cell-pct" *ngIf="testResult.totalTransactions > 0">({{ getPercent(row.total, testResult.totalTransactions) }}%)</span>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="summary-footer-row" *ngIf="getTypeBreakdown(testResult) as rows">
+                <td class="font-bold">Загальний розподіл потоку</td>
+                <td class="font-mono font-bold text-danger">
+                  {{ getBreakdownTotals(rows).critical | number }}
+                  <span class="cell-pct" *ngIf="getBreakdownTotals(rows).total > 0">({{ getPercent(getBreakdownTotals(rows).critical, getBreakdownTotals(rows).total) }}%)</span>
+                </td>
+                <td class="font-mono font-bold text-warn">
+                  {{ getBreakdownTotals(rows).high | number }}
+                  <span class="cell-pct" *ngIf="getBreakdownTotals(rows).total > 0">({{ getPercent(getBreakdownTotals(rows).high, getBreakdownTotals(rows).total) }}%)</span>
+                </td>
+                <td class="font-mono font-bold text-info">
+                  {{ getBreakdownTotals(rows).standard | number }}
+                  <span class="cell-pct" *ngIf="getBreakdownTotals(rows).total > 0">({{ getPercent(getBreakdownTotals(rows).standard, getBreakdownTotals(rows).total) }}%)</span>
+                </td>
+                <td class="font-mono font-bold text-secondary">
+                  {{ getBreakdownTotals(rows).low | number }}
+                  <span class="cell-pct" *ngIf="getBreakdownTotals(rows).total > 0">({{ getPercent(getBreakdownTotals(rows).low, getBreakdownTotals(rows).total) }}%)</span>
+                </td>
+                <td class="font-mono font-bold total-cell">
+                  {{ getBreakdownTotals(rows).total | number }} (100%)
+                </td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </div>
 
       <!-- Detailed Transaction Table -->
       <div class="data-table-wrapper">
+        <div class="table-caption-bar">
+          <span class="table-caption-title">Вибірка опрацьованих транзакцій потоку (перші 50 записів)</span>
+        </div>
         <p-table
           [value]="testResult.sampleResults"
           [paginator]="true"
@@ -397,27 +631,31 @@
           [tableStyle]="{ 'min-width': '100%' }">
           <ng-template pTemplate="header">
             <tr>
-              <th pSortableColumn="id" style="width: 25%">Transaction ID <p-sortIcon field="id"></p-sortIcon></th>
-              <th pSortableColumn="priority" style="width: 15%">Priority Class <p-sortIcon field="priority"></p-sortIcon></th>
-              <th pSortableColumn="score" style="width: 12%">Confidence <p-sortIcon field="score"></p-sortIcon></th>
-              <th pSortableColumn="decisionLatencyUs" style="width: 16%">Latency (&mu;s) <p-sortIcon field="decisionLatencyUs"></p-sortIcon></th>
-              <th style="width: 22%">Routing Justification</th>
-              <th style="width: 10%">Status</th>
+              <th pSortableColumn="id" style="width: 22%">Ідентифікатор транзакції <p-sortIcon field="id"></p-sortIcon></th>
+              <th style="width: 14%">Тип операції</th>
+              <th pSortableColumn="priority" style="width: 13%">Клас черги <p-sortIcon field="priority"></p-sortIcon></th>
+              <th pSortableColumn="score" style="width: 11%">Оцінка допуску <p-sortIcon field="score"></p-sortIcon></th>
+              <th pSortableColumn="decisionLatencyUs" style="width: 14%">Затримка (мкс) <p-sortIcon field="decisionLatencyUs"></p-sortIcon></th>
+              <th style="width: 18%">Обґрунтування класифікації</th>
+              <th style="width: 8%">Статус</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-item>
             <tr>
               <td class="font-mono text-muted-dark">{{ item.id }}</td>
               <td>
+                <span class="type-badge">{{ getTypeUkrainianLabel(getTransactionType(item)) }}</span>
+              </td>
+              <td>
                 <span class="priority-tag" [ngClass]="item.priority.toLowerCase()">
-                  {{ item.priority }}
+                  {{ getPriorityUkrainianLabel(item.priority) }}
                 </span>
               </td>
               <td class="font-mono">{{ item.score | number:'1.2-2' }}</td>
-              <td class="font-mono font-bold">{{ item.decisionLatencyUs }} &mu;s</td>
+              <td class="font-mono font-bold">{{ item.decisionLatencyUs }} мкс</td>
               <td class="justification-cell">{{ item.reason }}</td>
               <td>
-                <span class="status-pill-ok">ACCEPTED</span>
+                <span class="status-pill-ok">ПРИЙНЯТО</span>
               </td>
             </tr>
           </ng-template>
@@ -429,11 +667,11 @@
     <section class="console-section gallery-section">
       <div class="section-header">
         <div>
-          <h2 class="section-title">Experimental Benchmarks & Thesis Graphics (Chapter 4)</h2>
-          <p class="section-desc">Academic 300-DPI evaluation figures generated across 1,000 to 100,000 transaction workloads</p>
+          <h2 class="section-title">Експериментальні графіки досліджень (Розділ 4 дипломної роботи)</h2>
+          <p class="section-desc">Дослідження характеристик продуктивності системи при масштабуванні навантаження від 1 000 до 100 000 транзакцій</p>
         </div>
         <div class="gallery-badge">
-          <i class="pi pi-images"></i> 4 Publication Visualizations
+          4 наукові діаграми
         </div>
       </div>
 
@@ -445,7 +683,6 @@
           class="chart-tab-btn"
           [class.active]="activeChart === c.id"
           (click)="activeChart = c.id">
-          <span class="tab-fig-tag">{{ c.figure }}</span>
           <span class="tab-label">{{ c.title }}</span>
         </button>
       </div>
@@ -454,20 +691,537 @@
       <div class="chart-display-container">
         <div class="chart-info-header">
           <div class="chart-info-left">
-            <span class="chart-figure-badge">{{ selectedChart.figure }}</span>
             <h3 class="chart-title">{{ selectedChart.title }}</h3>
           </div>
-          <a [href]="selectedChart.file" target="_blank" download class="chart-download-btn">
-            <i class="pi pi-external-link"></i> Full 300-DPI PNG
-          </a>
         </div>
 
         <p class="chart-caption">{{ selectedChart.desc }}</p>
 
-        <div class="chart-image-wrap">
-          <img [src]="selectedChart.file" [alt]="selectedChart.title" class="thesis-chart-img" />
+        <!-- Scientific Vector Benchmark Chart -->
+        <div class="interactive-svg-wrap">
+          <!-- Chart 1: P99 Tail Latency Scaling -->
+          <svg *ngIf="activeChart === 'p99'" viewBox="0 0 740 310" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="p99AdaptiveArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1d4ed8" stop-opacity="0.20" />
+                <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.02" />
+              </linearGradient>
+              <linearGradient id="p99SlaViolation" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#b91c1c" stop-opacity="0.10" />
+                <stop offset="100%" stop-color="#b91c1c" stop-opacity="0.01" />
+              </linearGradient>
+            </defs>
+
+            <!-- Plot Box Frame -->
+            <rect x="85" y="35" width="585" height="215" fill="#fcfdfe" stroke="#cbd5e1" stroke-width="1.2" />
+
+            <!-- SLA Violation Shaded Region (Above 100 ms) -->
+            <rect
+              x="85"
+              y="35"
+              width="585"
+              [attr.height]="getSvgPointY_P99(100) - 35"
+              fill="url(#p99SlaViolation)" />
+            <text x="95" y="48" font-size="9" fill="#b91c1c" font-weight="600" opacity="0.85">Зона порушення SLA (Latency SLA Violation)</text>
+
+            <!-- Horizontal Grid lines & Tick Marks -->
+            <line x1="85" y1="35" x2="670" y2="35" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="35" x2="85" y2="35" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="39" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">
+              {{ executionMode === 'real' ? '200' : '1000' }}
+            </text>
+
+            <line x1="85" y1="88.75" x2="670" y2="88.75" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="88.75" x2="85" y2="88.75" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="92.75" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">
+              {{ executionMode === 'real' ? '150' : '750' }}
+            </text>
+
+            <line x1="85" y1="142.5" x2="670" y2="142.5" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="142.5" x2="85" y2="142.5" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="146.5" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">
+              {{ executionMode === 'real' ? '100' : '500' }}
+            </text>
+
+            <line x1="85" y1="196.25" x2="670" y2="196.25" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="196.25" x2="85" y2="196.25" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="200.25" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">
+              {{ executionMode === 'real' ? '50' : '250' }}
+            </text>
+
+            <!-- Zero level -->
+            <line x1="80" y1="250" x2="85" y2="250" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="254" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">0</text>
+
+            <!-- SLA Threshold Line (100 ms) -->
+            <line
+              x1="85"
+              [attr.y1]="getSvgPointY_P99(100)"
+              x2="670"
+              [attr.y2]="getSvgPointY_P99(100)"
+              stroke="#b91c1c"
+              stroke-dasharray="5,3"
+              stroke-width="1.6" />
+            <text x="200" [attr.y]="getSvgPointY_P99(100) - 5" font-size="9.5" fill="#b91c1c" text-anchor="end" font-weight="700">
+              Поріг SLA = 100 мс
+            </text>
+
+            <!-- Vertical Milestone Grid Lines & Ticks -->
+            <ng-container *ngFor="let m of getMilestones()">
+              <line [attr.x1]="getSvgPointX(m)" y1="35" [attr.x2]="getSvgPointX(m)" y2="250" stroke="#f1f5f9" stroke-width="1" />
+              <line [attr.x1]="getSvgPointX(m)" y1="250" [attr.x2]="getSvgPointX(m)" y2="255" stroke="#64748b" stroke-width="1.2" />
+              <text [attr.x]="getSvgPointX(m)" y="268" font-size="10" fill="#475569" text-anchor="middle" font-family="monospace">
+                {{ m >= 1000 ? (m / 1000) + 'k' : m }}
+              </text>
+            </ng-container>
+
+            <!-- Axis Title Labels -->
+            <text x="-142" y="24" transform="rotate(-90)" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">
+              Хвостова затримка P99 (L₉₉), мс
+            </text>
+            <text x="377" y="292" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">
+              Обсяг транзакційного навантаження (N, транзакцій)
+            </text>
+
+            <!-- Shaded Area Under Adaptive Curve -->
+            <path [attr.d]="getSvgArea_P99('adaptive')" fill="url(#p99AdaptiveArea)" />
+
+            <!-- Empirical Curves -->
+            <!-- FIFO Baseline (Dashed Crimson) -->
+            <path [attr.d]="getSvgPath_P99('fifo')" fill="none" stroke="#b91c1c" stroke-width="2.2" stroke-dasharray="6,4" stroke-linecap="round" />
+
+            <!-- Static Rules (Dash-dot Amber) -->
+            <path [attr.d]="getSvgPath_P99('static')" fill="none" stroke="#d97706" stroke-width="2.0" stroke-dasharray="8,3,2,3" stroke-linecap="round" />
+
+            <!-- Adaptive QoS (Solid Deep Blue) -->
+            <path [attr.d]="getSvgPath_P99('adaptive')" fill="none" stroke="#1d4ed8" stroke-width="2.8" stroke-linecap="round" />
+
+            <!-- Active Operating Point Hairline for current testCount -->
+            <line
+              [attr.x1]="getSvgPointX(testCount)"
+              y1="35"
+              [attr.x2]="getSvgPointX(testCount)"
+              y2="250"
+              stroke="#4338ca"
+              stroke-dasharray="3,3"
+              stroke-width="1.6" />
+
+            <!-- Pin Badge on Top of Operating Point -->
+            <rect [attr.x]="getSvgPointX(testCount) - 36" y="16" width="72" height="17" rx="3" fill="#4338ca" />
+            <text [attr.x]="getSvgPointX(testCount)" y="28" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" font-family="monospace">
+              N={{ testCount | number }}
+            </text>
+
+            <!-- Active Dots for Current Operating Point -->
+            <rect [attr.x]="getSvgPointX(testCount) - 5" [attr.y]="getSvgPointY_P99(getCurrentP99('fifo')) - 5" width="10" height="10" fill="#b91c1c" stroke="#ffffff" stroke-width="2" />
+            <polygon [attr.points]="getSvgPointX(testCount) + ',' + (getSvgPointY_P99(getCurrentP99('static')) - 6) + ' ' + (getSvgPointX(testCount) + 6) + ',' + getSvgPointY_P99(getCurrentP99('static')) + ' ' + getSvgPointX(testCount) + ',' + (getSvgPointY_P99(getCurrentP99('static')) + 6) + ' ' + (getSvgPointX(testCount) - 6) + ',' + getSvgPointY_P99(getCurrentP99('static'))" fill="#d97706" stroke="#ffffff" stroke-width="2" />
+            <circle [attr.cx]="getSvgPointX(testCount)" [attr.cy]="getSvgPointY_P99(getCurrentP99('adaptive'))" r="6" fill="#1d4ed8" stroke="#ffffff" stroke-width="2" />
+
+            <!-- In-Plot Scientific Legend Box (Moved to Top Right) -->
+            <g transform="translate(425, 45)">
+              <rect width="232" height="66" rx="4" fill="#ffffff" fill-opacity="0.95" stroke="#cbd5e1" stroke-width="1" />
+              <line x1="12" y1="16" x2="38" y2="16" stroke="#1d4ed8" stroke-width="2.5" />
+              <circle cx="25" cy="16" r="3.5" fill="#1d4ed8" stroke="#ffffff" stroke-width="1" />
+              <text x="46" y="19" font-size="9.5" font-weight="600" fill="#0f172a">Adaptive QoS (Розроблений)</text>
+
+              <line x1="12" y1="34" x2="38" y2="34" stroke="#d97706" stroke-width="2" stroke-dasharray="6,3" />
+              <polygon points="25,30.5 28.5,34 25,37.5 21.5,34" fill="#d97706" />
+              <text x="46" y="37" font-size="9.5" font-weight="600" fill="#334155">Static Rules (Статичні правила)</text>
+
+              <line x1="12" y1="52" x2="38" y2="52" stroke="#b91c1c" stroke-width="2" stroke-dasharray="5,3" />
+              <rect x="22" y="49" width="6" height="6" fill="#b91c1c" />
+              <text x="46" y="55" font-size="9.5" font-weight="600" fill="#334155">FIFO Baseline (Базова черга)</text>
+            </g>
+          </svg>
+
+          <!-- Chart 2: Total Queue Drainage Time Scaling -->
+          <svg *ngIf="activeChart === 'drain'" viewBox="0 0 740 310" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="drainAdaptiveArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1d4ed8" stop-opacity="0.18" />
+                <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.02" />
+              </linearGradient>
+            </defs>
+
+            <!-- Plot Box Frame -->
+            <rect x="85" y="35" width="585" height="215" fill="#fcfdfe" stroke="#cbd5e1" stroke-width="1.2" />
+
+            <!-- Horizontal Grid lines & Tick Marks -->
+            <line x1="85" y1="35" x2="670" y2="35" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="35" x2="85" y2="35" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="39" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">
+              {{ executionMode === 'real' ? '5.0 с' : '85 с' }}
+            </text>
+
+            <line x1="85" y1="88.75" x2="670" y2="88.75" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="88.75" x2="85" y2="88.75" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="92.75" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">
+              {{ executionMode === 'real' ? '3.75 с' : '60 с' }}
+            </text>
+
+            <line x1="85" y1="142.5" x2="670" y2="142.5" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="142.5" x2="85" y2="142.5" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="146.5" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">
+              {{ executionMode === 'real' ? '2.5 с' : '40 с' }}
+            </text>
+
+            <line x1="85" y1="196.25" x2="670" y2="196.25" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="196.25" x2="85" y2="196.25" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="200.25" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">
+              {{ executionMode === 'real' ? '1.25 с' : '20 с' }}
+            </text>
+
+            <!-- Zero level -->
+            <line x1="80" y1="250" x2="85" y2="250" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="254" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">0 с</text>
+
+            <!-- Vertical Milestone Grid Lines & Ticks -->
+            <ng-container *ngFor="let m of getMilestones()">
+              <line [attr.x1]="getSvgPointX(m)" y1="35" [attr.x2]="getSvgPointX(m)" y2="250" stroke="#f1f5f9" stroke-width="1" />
+              <line [attr.x1]="getSvgPointX(m)" y1="250" [attr.x2]="getSvgPointX(m)" y2="255" stroke="#64748b" stroke-width="1.2" />
+              <text [attr.x]="getSvgPointX(m)" y="268" font-size="10" fill="#475569" text-anchor="middle" font-family="monospace">
+                {{ m >= 1000 ? (m / 1000) + 'k' : m }}
+              </text>
+            </ng-container>
+
+            <!-- Axis Title Labels -->
+            <text x="-142" y="24" transform="rotate(-90)" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">
+              Час розвантаження черги (T), с
+            </text>
+            <text x="377" y="292" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">
+              Обсяг транзакційного навантаження (N, транзакцій)
+            </text>
+
+            <!-- Shaded Area Under Adaptive Drainage -->
+            <path [attr.d]="getSvgArea_Drain('adaptive')" fill="url(#drainAdaptiveArea)" />
+
+            <!-- Progression Lines -->
+            <!-- FIFO Line (Dashed Crimson) -->
+            <path [attr.d]="getSvgPath_Drain('fifo')" fill="none" stroke="#b91c1c" stroke-width="2.2" stroke-dasharray="6,4" stroke-linecap="round" />
+
+            <!-- Static Line (Dash-dot Amber) -->
+            <path [attr.d]="getSvgPath_Drain('static')" fill="none" stroke="#d97706" stroke-width="2.0" stroke-dasharray="8,3,2,3" stroke-linecap="round" />
+
+            <!-- Adaptive Line (Solid Deep Blue) -->
+            <path [attr.d]="getSvgPath_Drain('adaptive')" fill="none" stroke="#1d4ed8" stroke-width="2.8" stroke-linecap="round" />
+
+            <!-- Active Operating Point Hairline for current testCount -->
+            <line
+              [attr.x1]="getSvgPointX(testCount)"
+              y1="35"
+              [attr.x2]="getSvgPointX(testCount)"
+              y2="250"
+              stroke="#4338ca"
+              stroke-dasharray="3,3"
+              stroke-width="1.6" />
+
+            <!-- Pin Badge on Top of Operating Point -->
+            <rect [attr.x]="getSvgPointX(testCount) - 36" y="16" width="72" height="17" rx="3" fill="#4338ca" />
+            <text [attr.x]="getSvgPointX(testCount)" y="28" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" font-family="monospace">
+              N={{ testCount | number }}
+            </text>
+
+            <!-- Active Dots for Current Operating Point -->
+            <rect [attr.x]="getSvgPointX(testCount) - 5" [attr.y]="getSvgPointY_Drain(getCurrentDuration('fifo')) - 5" width="10" height="10" fill="#b91c1c" stroke="#ffffff" stroke-width="2" />
+            <polygon [attr.points]="getSvgPointX(testCount) + ',' + (getSvgPointY_Drain(getCurrentDuration('static')) - 6) + ' ' + (getSvgPointX(testCount) + 6) + ',' + getSvgPointY_Drain(getCurrentDuration('static')) + ' ' + getSvgPointX(testCount) + ',' + (getSvgPointY_Drain(getCurrentDuration('static')) + 6) + ' ' + (getSvgPointX(testCount) - 6) + ',' + getSvgPointY_Drain(getCurrentDuration('static'))" fill="#d97706" stroke="#ffffff" stroke-width="2" />
+            <circle [attr.cx]="getSvgPointX(testCount)" [attr.cy]="getSvgPointY_Drain(getCurrentDuration('adaptive'))" r="6" fill="#1d4ed8" stroke="#ffffff" stroke-width="2" />
+
+            <!-- In-Plot Scientific Legend Box (Moved to Top Right) -->
+            <g transform="translate(425, 45)">
+              <rect width="232" height="66" rx="4" fill="#ffffff" fill-opacity="0.95" stroke="#cbd5e1" stroke-width="1" />
+              <line x1="12" y1="16" x2="38" y2="16" stroke="#1d4ed8" stroke-width="2.5" />
+              <circle cx="25" cy="16" r="3.5" fill="#1d4ed8" stroke="#ffffff" stroke-width="1" />
+              <text x="46" y="19" font-size="9.5" font-weight="600" fill="#0f172a">Adaptive QoS (32,2 с / 100k)</text>
+
+              <line x1="12" y1="34" x2="38" y2="34" stroke="#d97706" stroke-width="2" stroke-dasharray="6,3" />
+              <polygon points="25,30.5 28.5,34 25,37.5 21.5,34" fill="#d97706" />
+              <text x="46" y="37" font-size="9.5" font-weight="600" fill="#334155">Static Rules (47,6 с / 100k)</text>
+
+              <line x1="12" y1="52" x2="38" y2="52" stroke="#b91c1c" stroke-width="2" stroke-dasharray="5,3" />
+              <rect x="22" y="49" width="6" height="6" fill="#b91c1c" />
+              <text x="46" y="55" font-size="9.5" font-weight="600" fill="#334155">FIFO Baseline (78,1 с / 100k)</text>
+            </g>
+          </svg>
+
+          <!-- Chart 3: Throughput Comparison (RPS) -->
+          <svg *ngIf="activeChart === 'throughput'" viewBox="0 0 740 310" preserveAspectRatio="xMidYMid meet">
+            <!-- Plot Box Frame -->
+            <rect x="85" y="35" width="585" height="215" fill="#fcfdfe" stroke="#cbd5e1" stroke-width="1.2" />
+
+            <!-- Horizontal Grid lines & Tick Marks -->
+            <line x1="85" y1="35" x2="670" y2="35" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="35" x2="85" y2="35" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="39" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">3 500</text>
+
+            <line x1="85" y1="96.4" x2="670" y2="96.4" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="96.4" x2="85" y2="96.4" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="100.4" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">2 500</text>
+
+            <line x1="85" y1="157.8" x2="670" y2="157.8" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="157.8" x2="85" y2="157.8" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="161.8" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">1 500</text>
+
+            <line x1="85" y1="219.3" x2="670" y2="219.3" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="80" y1="219.3" x2="85" y2="219.3" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="223.3" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">500</text>
+
+            <!-- Zero level -->
+            <line x1="80" y1="250" x2="85" y2="250" stroke="#64748b" stroke-width="1.2" />
+            <text x="76" y="254" font-size="10" fill="#475569" text-anchor="end" font-family="monospace">0</text>
+
+            <!-- Axis Title Labels -->
+            <text x="-142" y="24" transform="rotate(-90)" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">
+              Пропускна здатність (RPS, транзакцій/с)
+            </text>
+            <text x="377" y="292" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">
+              Дисципліни обслуговування черг
+            </text>
+
+            <!-- Columns (Vertical Comparative Bars) -->
+            <!-- Bar 1: FIFO Baseline (1 280 RPS) -->
+            <rect x="150" y="171.4" width="95" height="78.6" fill="#94a3b8" stroke="#64748b" stroke-width="1.2" rx="4" />
+            <text x="197.5" y="162" font-size="11" font-weight="700" fill="#334155" text-anchor="middle" font-family="monospace">
+              1 280 RPS
+            </text>
+            <text x="197.5" y="268" font-size="10.5" font-weight="600" fill="#334155" text-anchor="middle">
+              FIFO (Базова лінія)
+            </text>
+
+            <!-- Bar 2: Static Rules (2 100 RPS) -->
+            <rect x="330" y="120.9" width="95" height="129.1" fill="#f59e0b" stroke="#d97706" stroke-width="1.2" rx="4" />
+            <text x="377.5" y="111.5" font-size="11" font-weight="700" fill="#92400e" text-anchor="middle" font-family="monospace">
+              2 100 RPS
+            </text>
+            <text x="377.5" y="268" font-size="10.5" font-weight="600" fill="#334155" text-anchor="middle">
+              Статичні правила (+64%)
+            </text>
+
+            <!-- Bar 3: Adaptive QoS (3 105 RPS) -->
+            <rect x="510" y="59.1" width="95" height="190.9" fill="#2563eb" stroke="#1d4ed8" stroke-width="1.2" rx="4" />
+            <text x="557.5" y="49.5" font-size="11.5" font-weight="700" fill="#1d4ed8" text-anchor="middle" font-family="monospace">
+              3 105 RPS (+142%)
+            </text>
+            <text x="557.5" y="268" font-size="10.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">
+              Adaptive QoS (Розроблений)
+            </text>
+          </svg>
+
+          <!-- Chart 4: Tree-to-Code Compute Latency -->
+          <svg *ngIf="activeChart === 'tree_to_code'" viewBox="0 0 760 310" preserveAspectRatio="xMidYMid meet">
+            <!-- Plot Box Frame -->
+            <rect x="210" y="35" width="360" height="215" fill="#fcfdfe" stroke="#cbd5e1" stroke-width="1.2" />
+
+            <!-- Horizontal Grid lines -->
+            <line x1="210" y1="35" x2="570" y2="35" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="210" y1="106.6" x2="570" y2="106.6" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="210" y1="178.3" x2="570" y2="178.3" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="210" y1="250" x2="570" y2="250" stroke="#cbd5e1" stroke-width="1.2" />
+
+            <!-- Vertical Milestone Grid lines & Dynamic Ticks (scaled to N) -->
+            <!-- 0 ms -->
+            <line x1="210" y1="250" x2="210" y2="255" stroke="#64748b" stroke-width="1.2" />
+            <text x="210" y="268" font-size="10" fill="#475569" text-anchor="middle" font-family="monospace">0</text>
+
+            <!-- 25% tick -->
+            <line x1="300" y1="35" x2="300" y2="250" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="300" y1="250" x2="300" y2="255" stroke="#64748b" stroke-width="1.2" />
+            <text x="300" y="268" font-size="9.5" fill="#475569" text-anchor="middle" font-family="monospace">
+              {{ (testCount * 179.5 * 0.25 / 1000) | number:'1.1-2' }}
+            </text>
+
+            <!-- 50% tick -->
+            <line x1="390" y1="35" x2="390" y2="250" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="390" y1="250" x2="390" y2="255" stroke="#64748b" stroke-width="1.2" />
+            <text x="390" y="268" font-size="9.5" fill="#475569" text-anchor="middle" font-family="monospace">
+              {{ (testCount * 179.5 * 0.50 / 1000) | number:'1.1-2' }}
+            </text>
+
+            <!-- 75% tick -->
+            <line x1="480" y1="35" x2="480" y2="250" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="480" y1="250" x2="480" y2="255" stroke="#64748b" stroke-width="1.2" />
+            <text x="480" y="268" font-size="9.5" fill="#475569" text-anchor="middle" font-family="monospace">
+              {{ (testCount * 179.5 * 0.75 / 1000) | number:'1.1-2' }}
+            </text>
+
+            <!-- 100% tick -->
+            <line x1="570" y1="35" x2="570" y2="250" stroke="#cbd5e1" stroke-width="1" />
+            <line x1="570" y1="250" x2="570" y2="255" stroke="#64748b" stroke-width="1.2" />
+            <text x="570" y="268" font-size="9.5" fill="#475569" text-anchor="middle" font-family="monospace">
+              {{ (testCount * 179.5 / 1000) | number:'1.1-2' }} мс
+            </text>
+
+            <!-- Axis Title Labels -->
+            <text x="-142" y="16" transform="rotate(-90)" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">
+              Методи логічного висновку ШІ
+            </text>
+            <text x="390" y="295" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">
+              Сумарний час логічного висновку для поточної вибірки (N = {{ testCount | number }} транзакцій), мс
+            </text>
+
+            <!-- Row 1: Scikit-Learn -->
+            <text x="200" y="78" font-size="11" font-weight="600" fill="#334155" text-anchor="end">Scikit-Learn (Python)</text>
+            <rect x="210" y="60" width="360" height="30" fill="#ef4444" stroke="#b91c1c" stroke-width="1.2" rx="4" />
+            <text x="580" y="80" font-size="11" font-weight="700" fill="#991b1b" font-family="monospace">
+              {{ (testCount * 179.5 / 1000) | number:'1.1-2' }} мс
+              <tspan font-size="9.5" font-weight="500" fill="#64748b">(179,5 мкс/транзакція)</tspan>
+            </text>
+
+            <!-- Row 2: TF Lite / ONNX -->
+            <text x="200" y="150" font-size="11" font-weight="600" fill="#334155" text-anchor="end">TensorFlow / ONNX</text>
+            <rect x="210" y="132" width="51.3" height="30" fill="#f59e0b" stroke="#d97706" stroke-width="1.2" rx="4" />
+            <text x="272" y="152" font-size="11" font-weight="700" fill="#92400e" font-family="monospace">
+              {{ (testCount * 25.6 / 1000) | number:'1.1-2' }} мс
+              <tspan font-size="9.5" font-weight="500" fill="#64748b">(25,6 мкс &bull; у 7,0x швидше)</tspan>
+            </text>
+
+            <!-- Row 3: Tree-to-Code (Розроблений) -->
+            <text x="200" y="222" font-size="11" font-weight="700" fill="#1d4ed8" text-anchor="end">Tree-to-Code (Розроблений)</text>
+            <rect x="210" y="204" width="6" height="30" fill="#16a34a" stroke="#15803d" stroke-width="1.2" rx="3" />
+            <text x="226" y="224" font-size="11" font-weight="700" fill="#15803d" font-family="monospace">
+              {{ (testCount * 0.395 / 1000) | number:'1.2-3' }} мс
+              <tspan font-size="9.5" font-weight="500" fill="#15803d">(0,395 мкс &bull; прискорення у 454,4 раза!)</tspan>
+            </text>
+          </svg>
         </div>
       </div>
     </section>
+    </ng-container>
+
+    <!-- TAB 2: Mathematical QoS Model & Algorithms -->
+    <ng-container *ngIf="activeTab === 'formulas'">
+      <section class="console-section formula-section">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Математична модель та запропоновані методи пріоритезації</h2>
+            <p class="section-desc">Формальний математичний апарат кваліфікаційної роботи магістра: багатофакторний аналіз, адаптивні пороги, захист від голодування черг</p>
+          </div>
+          <div class="active-policy-badge">
+            Науково-теоретичний базис магістерської дисертації
+          </div>
+        </div>
+
+        <div class="thesis-math-container">
+          <!-- Formula (1): 8-Dimensional Feature Vector -->
+          <div class="thesis-math-card">
+            <div class="math-card-header">
+              <span class="card-title">1. Формування 8-вимірного вектора параметрів транзакції та поточного стану системи</span>
+              <span class="card-badge">Вхідний шлюз та розподілений кеш стану Redis</span>
+            </div>
+
+            <div class="equation-box">
+              <div class="equation-text">
+                <strong>x</strong><sub>i</sub> = ( <em>amount</em><sub>i</sub>, &nbsp;<em>type_code</em><sub>i</sub>, &nbsp;<em>retry_count</em><sub>i</sub>, &nbsp;<em>worker_cpu</em>(t), &nbsp;<em>consumer_lag</em>(t), &nbsp;<em>lag_growth_rate</em>(t), &nbsp;<em>db_pool_active</em>(t), &nbsp;<em>recent_p99_latency</em>(t) ),
+              </div>
+              <span class="equation-num">(1)</span>
+            </div>
+
+            <div class="math-academic-explanation">
+              <p class="formula-where">де вектор складається з двох функціональних груп ознак:</p>
+              <ul class="formula-var-list">
+                <li><strong>3 бізнес-параметри транзакції:</strong> <em>amount</em><sub>i</sub> (фінансова сума), <em>type_code</em><sub>i</sub> (тип операції: платіж, повернення, баланс, сервісна дія), <em>retry_count</em><sub>i</sub> (лічильник повторних спроб виконання);</li>
+                <li><strong>5 апаратних метрик інфраструктури:</strong> <em>worker_cpu</em>(t) (навантаження ядер воркерів), <em>consumer_lag</em>(t) (довжина черги Kafka), <em>lag_growth_rate</em>(t) (швидкість приросту залишку черги), <em>db_pool_active</em>(t) (заповненість пулу підключень HikariCP), <em>recent_p99_latency</em>(t) (хвостова затримка P99).</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Formula (2): Hardware Stress Index -->
+          <div class="thesis-math-card">
+            <div class="math-card-header">
+              <span class="card-title">2. Розрахунок інтегрального індексу апаратного навантаження системи</span>
+              <span class="card-badge">Телеметрія обчислювальних ресурсів</span>
+            </div>
+
+            <div class="equation-box">
+              <div class="equation-text">
+                <em>L</em><sub>sys</sub>(t) = <span class="fraction"><span class="numerator">CPU(t) + MEM(t)</span><span class="denominator">200,0</span></span> , &nbsp;&nbsp; <em>L</em><sub>sys</sub>(t) &isin; [0, 1],
+              </div>
+              <span class="equation-num">(2)</span>
+            </div>
+
+            <div class="math-academic-explanation">
+              <p class="formula-where">де складові формули означають:</p>
+              <ul class="formula-var-list">
+                <li><strong>CPU(t)</strong> — поточне завантаження процесорних ядер вузла обробки (0 % &hellip; 100 %);</li>
+                <li><strong>MEM(t)</strong> — завантаження оперативної пам'яті купи JVM Heap (0 % &hellip; 100 %);</li>
+                <li><strong>L<sub>sys</sub>(t) &isin; [0, 1]</strong> — інтегральний індекс апаратного стресу системи: результат нормування від 0,0 (спокій) до 1,0 (граничне перевантаження).</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Formula (3): Dynamic Sensitivity Threshold -->
+          <div class="thesis-math-card">
+            <div class="math-card-header">
+              <span class="card-title">3. Обчислення адаптивного порогу допуску транзакцій (Backpressure)</span>
+              <span class="card-badge">Механізм динамічного розвантаження</span>
+            </div>
+
+            <div class="equation-box">
+              <div class="equation-text">
+                &theta;(t) = &theta;<sub>base</sub> + &alpha; &middot; <em>L</em><sub>sys</sub>(t) , &nbsp;&nbsp; (&theta;<sub>base</sub> = 0,50, &nbsp;&alpha; = 0,30),
+              </div>
+              <span class="equation-num">(3)</span>
+            </div>
+
+            <div class="math-academic-explanation">
+              <p class="formula-where">де параметри динамічного регулювання означають:</p>
+              <ul class="formula-var-list">
+                <li><strong>&theta;(t)</strong> — динамічний поріг відсікання транзакцій (критерій допуску до високопріоритетної черги);</li>
+                <li><strong>&theta;<sub>base</sub> = 0,50</strong> та <strong>&alpha; = 0,30</strong> — базовий норматив допуску та коефіцієнт чутливості зворотного тиску;</li>
+                <li><strong>механізм Backpressure:</strong> зростання порогу від 0,50 до 0,80 автоматично ізолює критичні платежі та захищає систему від каскадної відмови.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Formula (4): Anti-Starvation Aging -->
+          <div class="thesis-math-card">
+            <div class="math-card-header">
+              <span class="card-title">4. Алгоритм динамічного старіння для захисту від голодування черг (Anti-Starvation)</span>
+              <span class="card-badge">Теорія розкладу та справедливого розподілу</span>
+            </div>
+
+            <div class="equation-box">
+              <div class="equation-text">
+                <em>P</em>(t) = <em>P</em><sub>0</sub> + &beta; &middot; (<em>t</em> &minus; <em>t</em><sub>0</sub>) + &gamma; &middot; <em>R</em>,
+              </div>
+              <span class="equation-num">(4)</span>
+            </div>
+
+            <div class="math-academic-explanation">
+              <p class="formula-where">де компоненти алгоритму запобігання простою визначають:</p>
+              <ul class="formula-var-list">
+                <li><strong>P<sub>0</sub></strong> — базовий початковий пріоритет транзакції, призначений класифікатором;</li>
+                <li><strong>t &minus; t<sub>0</sub></strong> — тривалість фактичного очікування повідомлення в буфері черги брокера;</li>
+                <li><strong>R (retryCount)</strong> — кількість попередніх повторних спроб виконання операції;</li>
+                <li><strong>&beta; та &gamma;</strong> — адаптивні коефіцієнти інкременту ваги: завдяки старінню навіть другорядні операції поступово накопичують бали та гарантовано виконуються воркерами.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Formula (5): Weighted Fair Queuing -->
+          <div class="thesis-math-card">
+            <div class="math-card-header">
+              <span class="card-title">5. Зважене справедливе чергування пулів консьюмерів (Weighted Fair Queuing)</span>
+              <span class="card-badge">Диспетчеризація споживачів Kafka</span>
+            </div>
+
+            <div class="equation-box">
+              <div class="equation-text">
+                &phi;<sub>i</sub> = <span class="fraction"><span class="numerator">w<sub>i</sub></span><span class="denominator">&sum;<sub>j &isin; A</sub> w<sub>j</sub></span></span> , &nbsp;&nbsp; (<em>w</em><sub>critical</sub> = 4, &nbsp;<em>w</em><sub>high</sub> = 3, &nbsp;<em>w</em><sub>std</sub> = 2, &nbsp;<em>w</em><sub>low</sub> = 1),
+              </div>
+              <span class="equation-num">(5)</span>
+            </div>
+
+            <div class="math-academic-explanation">
+              <p class="formula-where">де параметри диференційованого обслуговування визначають:</p>
+              <ul class="formula-var-list">
+                <li><strong>w<sub>i</sub></strong> — ваговий коефіцієнт обчислювальних потоків, закріплений за кожною чергою брокера (4:3:2:1);</li>
+                <li><strong>A</strong> — множина всіх активних топіків брокера Kafka;</li>
+                <li><strong>&phi;<sub>i</sub></strong> — гарантована частка пропускної здатності серверного ядра: критична черга отримує 40% потоків, висока 30%, стандартна 20%, а низька 10%, унеможливлюючи нульову продуктивність.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </ng-container>
   </main>
 </div>

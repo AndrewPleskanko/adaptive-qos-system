@@ -175,6 +175,8 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - thesis-network
 
@@ -184,10 +186,16 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./monitoring/grafana-dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana-provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana-dashboards:/etc/grafana/dashboards:ro
     depends_on:
       - prometheus
     networks:

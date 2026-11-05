@@ -45,3 +45,5 @@ thesis/*
 
 admin-dashboard/public/
 admin-dashboard/public/*
+
+*.npm

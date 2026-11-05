@@ -63,7 +63,7 @@ public class TransactionProcessingService {
 
             transactionRepository.saveAndFlush(entity);
 
-            simulateProcessingDelay(priority);
+            simulateProcessingDelay(type);
 
             entity.setStatus(TransactionStatus.COMPLETED);
             entity.setProcessedAt(Instant.now());
@@ -98,12 +98,13 @@ public class TransactionProcessingService {
         }
     }
 
-    private void simulateProcessingDelay(Priority priority) throws InterruptedException {
-        long delay = switch (priority) {
-            case CRITICAL -> 10;
-            case HIGH -> 50;
-            case STANDARD -> 100;
-            case LOW -> 200;
+    private void simulateProcessingDelay(TransactionType type) throws InterruptedException {
+        long delay = switch (type) {
+            case HEALTH_CHECK   -> 5;
+            case BALANCE_UPDATE -> 15;
+            case PAYMENT        -> 30;
+            case REFUND         -> 60;
+            case ADMIN_ACTION   -> 200;
         };
         Thread.sleep(delay);
     }

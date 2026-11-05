@@ -53,33 +53,33 @@ def generate_paysim_workload(num_samples=15000):
         p99 = recent_p99_latency[i]
 
         if tx_type == "PAYMENT":
-            amount_score = min(amount / 5000.0, 1.0)
-            base_score = 0.65 + amount_score * 0.30
+            amount_score = min(amount / 4000.0, 1.0)
+            base_score = 0.52 + amount_score * 0.35
         elif tx_type == "REFUND":
-            base_score = 0.70
+            base_score = 0.58
         elif tx_type == "BALANCE_UPDATE":
-            base_score = 0.45
+            base_score = 0.42
         elif tx_type == "ADMIN_ACTION":
-            base_score = 0.85
+            base_score = 0.18
         else:  # HEALTH_CHECK
-            base_score = 0.15
+            base_score = 0.08
 
-        pressure = (cpu / 100.0) * 0.3 + (lag / 5000.0) * 0.2 + (db * 0.3) + (p99 / 100.0) * 0.2
+        pressure = (cpu / 100.0) * 0.25 + (lag / 5000.0) * 0.2 + (db * 0.25) + (p99 / 100.0) * 0.2
         if growth > 15.0:
-            pressure += 0.1
+            pressure += 0.08
 
-        retry_boost = min(retry * 0.12, 0.36)
+        retry_boost = min(retry * 0.20, 0.45)
 
-        final_score = np.clip(base_score - pressure * 0.25 + retry_boost, 0.0, 1.0)
+        final_score = np.clip(base_score - pressure * 0.20 + retry_boost, 0.0, 1.0)
 
-        if final_score >= 0.82:
-            priority = 3  # CRITICAL
-        elif final_score >= 0.58:
-            priority = 2  # HIGH
+        if final_score >= 0.66:
+            priority = 3  # CRITICAL (~10-12%)
+        elif final_score >= 0.48:
+            priority = 2  # HIGH (~28-32%)
         elif final_score >= 0.32:
-            priority = 1  # STANDARD
+            priority = 1  # STANDARD (~40-45%)
         else:
-            priority = 0  # LOW
+            priority = 0  # LOW (~17-20%)
 
         data.append({
             "amount": amount,

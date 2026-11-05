@@ -1,119 +1,133 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0">
   <diagram id="Adaptive_QoS_Architecture" name="Adaptive QoS Architecture">
-    <mxGraphModel dx="1740" dy="837" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+    <mxGraphModel dx="1322" dy="636" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="group-client" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7f7f7;strokeColor=#cccccc;dashed=1;fontColor=#666666;fontSize=14;verticalAlign=top;align=center;" value="Client Layer" vertex="1">
-          <mxGeometry height="280" width="430" x="10" y="60" as="geometry" />
+        <mxCell id="group-client" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;dashed=1;fontColor=#475569;fontSize=13;fontStyle=1;verticalAlign=top;align=center;" value="Client Layer" vertex="1">
+          <mxGeometry height="200" width="352" x="30" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="node-user" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f5f5f5;strokeColor=#333333;fontColor=#212121;" value="Client / User" vertex="1">
-          <mxGeometry height="80" width="40" x="35" y="160" as="geometry" />
+        <mxCell id="node-user" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;" value="Client / User" vertex="1">
+          <mxGeometry height="70" width="35" x="55" y="125" as="geometry" />
         </mxCell>
-        <mxCell id="node-admin-ui" parent="1" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#e53935;fontColor=#212121;rounded=1;gradientColor=#ffcdd2;fontSize=12;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/angular/angular-original.svg&quot; width=&quot;24&quot; height=&quot;24&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Admin Dashboard &amp;amp; Traffic Generator&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: rgb(85, 85, 85);&quot;&gt;(Angular 21 / PrimeNG 21)&lt;br&gt;&lt;/font&gt;" vertex="1">
-          <mxGeometry height="140" width="280" x="130" y="130" as="geometry" />
-        </mxCell>
-        <mxCell id="edge-user-admin" edge="1" parent="1" source="node-user" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#333;strokeWidth=1.5;endArrow=classic;" target="node-admin-ui" value="Web UI">
+        <mxCell id="il0sOTG2gReCPSc4aAdp-1" edge="1" parent="1" source="node-admin-ui" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="node-user" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="group-backend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7f7f7;strokeColor=#cccccc;dashed=1;fontColor=#666666;fontSize=14;verticalAlign=top;align=center;" value="Backend Microservices Tier" vertex="1">
-          <mxGeometry height="280" width="860" x="480" y="60" as="geometry" />
+        <mxCell id="node-admin-ui" parent="1" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#e53935;fontColor=#212121;rounded=1;gradientColor=#ffcdd2;fontSize=11;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/angular/angular-original.svg&quot; width=&quot;20&quot; height=&quot;20&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Admin Dashboard &amp;amp; Traffic Generator&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #555;&quot;&gt;(Angular 21 / PrimeNG 21)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="230" x="138" y="115" as="geometry" />
         </mxCell>
-        <mxCell id="node-gateway" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#4caf50;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#c8e6c9;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Gateway Service&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: rgb(85, 85, 85);&quot;&gt;(Java 21 / Spring Boot 3)&lt;br&gt;&lt;/font&gt;" vertex="1">
-          <mxGeometry height="140" width="240" x="25" y="70" as="geometry" />
+        <mxCell id="edge-user-admin" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="node-admin-ui" value="Web UI">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="78" y="160" as="sourcePoint" />
+            <mxPoint x="127" y="160" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="node-inference" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#2196f3;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#bbdefb;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Inference Engine&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: rgb(85, 85, 85);&quot;&gt;(Python 3.12 / gRPC Server)&lt;br&gt;&lt;/font&gt;" vertex="1">
-          <mxGeometry height="140" width="240" x="310" y="70" as="geometry" />
+        <mxCell id="group-backend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;dashed=1;fontColor=#475569;fontSize=13;fontStyle=1;verticalAlign=top;align=center;" value="Backend Microservices Tier" vertex="1">
+          <mxGeometry height="200" width="700" x="430" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="node-processor" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#4caf50;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#c8e6c9;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Core Processor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: rgb(85, 85, 85);&quot;&gt;(Java 21 / Spring Boot 3)&lt;br&gt;&lt;/font&gt;" vertex="1">
-          <mxGeometry height="140" width="240" x="595" y="70" as="geometry" />
+        <mxCell id="node-gateway" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#4caf50;fontColor=#212121;rounded=1;fontSize=11;gradientColor=#c8e6c9;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Gateway Service&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #555;&quot;&gt;(Java 21 / Spring Boot 3)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="190" x="25" y="65" as="geometry" />
         </mxCell>
-        <mxCell id="edge-admin-gw" edge="1" parent="1" source="node-admin-ui" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565c0;strokeWidth=2;endArrow=block;endFill=1;" target="node-gateway" value="HTTP REST &lt;br&gt;(Batch)">
+        <mxCell id="node-inference" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#2196f3;fontColor=#212121;rounded=1;fontSize=11;gradientColor=#bbdefb;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Inference Engine&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #555;&quot;&gt;(Python 3.12 / gRPC Server)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="190" x="255" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="node-processor" parent="group-backend" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#4caf50;fontColor=#212121;rounded=1;fontSize=11;gradientColor=#c8e6c9;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Core Processor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #555;&quot;&gt;(Java 21 / Spring Boot 3)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="190" x="485" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-admin-gw" edge="1" parent="1" source="node-admin-ui" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565c0;strokeWidth=2;endArrow=block;endFill=1;" target="node-gateway" value="HTTP REST&lt;br&gt;(Batch)">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="edge-gw-inf" edge="1" parent="1" source="node-gateway" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2196f3;strokeWidth=2;endArrow=block;endFill=1;" target="node-inference" value="gRPC">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="group-monitoring" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7f7f7;strokeColor=#cccccc;dashed=1;fontColor=#666666;fontSize=14;verticalAlign=top;align=center;" value="Observability Tier" vertex="1">
-          <mxGeometry height="280" width="360" x="1370" y="60" as="geometry" />
+        <mxCell id="group-monitoring" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;dashed=1;fontColor=#475569;fontSize=13;fontStyle=1;verticalAlign=top;align=center;" value="Observability Tier" vertex="1">
+          <mxGeometry height="200" width="240" x="1170" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="node-prometheus" parent="group-monitoring" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#ffe0b2;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/prometheus/prometheus-original.svg&quot; width=&quot;20&quot; height=&quot;20&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Prometheus&lt;/b&gt;" vertex="1">
-          <mxGeometry height="55" width="320" x="20" y="37" as="geometry" />
+        <mxCell id="node-prometheus" parent="group-monitoring" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontColor=#212121;rounded=1;fontSize=11;gradientColor=#ffe0b2;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/prometheus/prometheus-original.svg&quot; width=&quot;16&quot; height=&quot;16&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Prometheus&lt;/b&gt;" vertex="1">
+          <mxGeometry height="42" width="200" x="20" y="26" as="geometry" />
         </mxCell>
-        <mxCell id="node-grafana" parent="group-monitoring" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#ff8f00;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#ffecb3;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/grafana/grafana-original.svg&quot; width=&quot;20&quot; height=&quot;20&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Grafana Dashboards&lt;/b&gt;" vertex="1">
-          <mxGeometry height="55" width="320" x="20" y="132" as="geometry" />
+        <mxCell id="node-grafana" parent="group-monitoring" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#ff8f00;fontColor=#212121;rounded=1;fontSize=11;gradientColor=#ffecb3;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/grafana/grafana-original.svg&quot; width=&quot;16&quot; height=&quot;16&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Grafana Dashboards&lt;/b&gt;" vertex="1">
+          <mxGeometry height="42" width="200" x="20" y="90" as="geometry" />
         </mxCell>
-        <mxCell id="node-kafkaui" parent="group-monitoring" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#ab47bc;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#e1bee7;" value="&lt;b&gt;Kafka UI&lt;/b&gt;" vertex="1">
-          <mxGeometry height="55" width="320" x="20" y="202" as="geometry" />
+        <mxCell id="node-kafkaui" parent="group-monitoring" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#ab47bc;fontColor=#212121;rounded=1;fontSize=11;gradientColor=#e1bee7;" value="&lt;b&gt;Kafka UI&lt;/b&gt;" vertex="1">
+          <mxGeometry height="42" width="200" x="20" y="145" as="geometry" />
         </mxCell>
-        <mxCell id="group-data" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7f7f7;strokeColor=#cccccc;dashed=1;fontColor=#666666;fontSize=14;verticalAlign=top;align=center;" value="Data &amp; Infrastructure Tier" vertex="1">
-          <mxGeometry height="270" width="860" x="480" y="370" as="geometry" />
+        <mxCell id="group-data" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;dashed=1;fontColor=#475569;fontSize=13;fontStyle=1;verticalAlign=top;align=center;" value="Data &amp; Infrastructure Tier" vertex="1">
+          <mxGeometry height="210" width="700" x="430" y="300" as="geometry" />
         </mxCell>
-        <mxCell id="node-kafka" parent="group-data" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ff9800;fontColor=#212121;rounded=1;fontSize=12;gradientColor=#ffe0b2;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/apachekafka/apachekafka-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Apache Kafka&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #555;&quot;&gt;(4 QoS Priority Topics)&lt;/font&gt;" vertex="1">
-          <mxGeometry height="140" width="240" x="25" y="65" as="geometry" />
+        <mxCell id="node-kafka" parent="group-data" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ff9800;fontColor=#212121;rounded=1;fontSize=11;gradientColor=#ffe0b2;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/apachekafka/apachekafka-original.svg&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Apache Kafka&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #555;&quot;&gt;(4 QoS Priority Topics)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="190" x="25" y="55" as="geometry" />
         </mxCell>
-        <mxCell id="node-redis" parent="group-data" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#f44336;fontColor=#212121;fontSize=12;gradientColor=#ffcdd2;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/redis/redis-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Redis Cache&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #555;&quot;&gt;(Telemetry &amp;amp; Metrics)&lt;/font&gt;" vertex="1">
-          <mxGeometry height="155" width="240" x="310" y="55" as="geometry" />
+        <mxCell id="node-redis" parent="group-data" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#f44336;fontColor=#212121;fontSize=11;gradientColor=#ffcdd2;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/redis/redis-original.svg&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;Redis Cache&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #555;&quot;&gt;(Telemetry &amp;amp; Metrics)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="110" width="190" x="255" y="50" as="geometry" />
         </mxCell>
-        <mxCell id="node-postgres" parent="group-data" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#e8eaf6;strokeColor=#3f51b5;fontColor=#212121;fontSize=12;gradientColor=#c5cae9;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg&quot; width=&quot;22&quot; height=&quot;22&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;PostgreSQL DB&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #555;&quot;&gt;(transaction_db)&lt;/font&gt;" vertex="1">
-          <mxGeometry height="155" width="240" x="595" y="55" as="geometry" />
+        <mxCell id="node-postgres" parent="group-data" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#e8eaf6;strokeColor=#3f51b5;fontColor=#212121;fontSize=11;gradientColor=#c5cae9;" value="&lt;img src=&quot;https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle; margin-right: 6px;&quot;&gt;&lt;b&gt;PostgreSQL DB&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #555;&quot;&gt;(transaction_db)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="110" width="190" x="485" y="50" as="geometry" />
         </mxCell>
         <mxCell id="edge-gw-kafka" edge="1" parent="1" source="node-gateway" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#ff9800;strokeWidth=2;endArrow=block;endFill=1;" target="node-kafka" value="Publish">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="edge-inf-redis" edge="1" parent="1" source="node-inference" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#f44336;strokeWidth=1.5;dashed=1;endArrow=classic;" target="node-redis" value="Read State">
-          <mxGeometry relative="1" x="-0.5152" as="geometry">
+          <mxGeometry relative="1" x="0.1111" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="edge-gw-redis" edge="1" parent="1" source="node-gateway" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#f44336;strokeWidth=1.5;dashed=1;endArrow=classic;entryX=0.15;entryY=0.05;entryDx=0;entryDy=0;entryPerimeter=0;" target="node-redis" value="Telemetry">
-          <mxGeometry relative="1" as="geometry">
+        <mxCell id="edge-gw-redis" edge="1" parent="1" source="node-gateway" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#f44336;strokeWidth=1.5;dashed=1;endArrow=classic;entryX=0.113;entryY=0.054;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" target="node-redis" value="Telemetry">
+          <mxGeometry relative="1" x="-0.3799" as="geometry">
+            <mxPoint x="1" as="offset" />
             <Array as="points">
-              <mxPoint x="690" y="300" />
-              <mxPoint x="826" y="300" />
+              <mxPoint x="597.5" y="240" />
+              <mxPoint x="706.5" y="240" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="edge-kafka-proc" edge="1" parent="1" source="node-kafka" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#ff9800;strokeWidth=2;endArrow=block;endFill=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;" target="node-processor" value="Consume">
-          <mxGeometry relative="1" x="0.4308" as="geometry">
-            <mxPoint as="offset" />
+          <mxGeometry relative="1" x="-0.4597" as="geometry">
+            <mxPoint x="-1" as="offset" />
             <Array as="points">
-              <mxPoint x="685.06" y="360" />
-              <mxPoint x="1194.94" y="360" />
+              <mxPoint x="595" y="355" />
+              <mxPoint x="595" y="280" />
+              <mxPoint x="980" y="280" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="edge-proc-pg" edge="1" parent="1" source="node-processor" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#3f51b5;strokeWidth=2;endArrow=block;endFill=1;entryX=0.85;entryY=0.05;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.85;exitY=1.015;exitDx=0;exitDy=0;exitPerimeter=0;" target="node-postgres" value="JPA Persist">
+        <mxCell id="edge-proc-pg" edge="1" parent="1" source="node-processor" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#3f51b5;strokeWidth=2;endArrow=block;endFill=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="node-postgres" value="JPA Persist">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-proc-redis" edge="1" parent="1" source="node-processor" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#f44336;strokeWidth=1.5;dashed=1;endArrow=classic;exitX=0.25;exitY=1;exitDx=0;exitDy=0;" target="node-redis" value="Metrics">
-          <mxGeometry relative="1" as="geometry">
+        <mxCell id="edge-proc-redis" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#f44336;strokeWidth=1.5;dashed=1;endArrow=classic;" target="node-redis" value="Metrics">
+          <mxGeometry relative="1" x="-0.3067" as="geometry">
+            <mxPoint as="offset" />
             <Array as="points">
-              <mxPoint x="1135" y="300" />
-              <mxPoint x="990" y="300" />
+              <mxPoint x="940" y="215.1" />
+              <mxPoint x="940" y="250" />
+              <mxPoint x="830" y="250" />
             </Array>
+            <mxPoint x="940" y="215.1" as="sourcePoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="edge-prom-gw" edge="1" parent="1" source="node-prometheus" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e65100;strokeWidth=1.5;dashed=1;endArrow=open;" target="node-gateway" value="Scrape">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1550" y="100" />
-              <mxPoint x="620" y="100" />
+              <mxPoint x="1270" y="30" />
+              <mxPoint x="550" y="30" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="edge-prom-proc" edge="1" parent="1" source="node-prometheus" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e65100;strokeWidth=1.5;dashed=1;endArrow=open;" target="node-processor" value="Scrape">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="edge-prom-proc" edge="1" parent="1" source="node-prometheus" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e65100;strokeWidth=1.5;dashed=1;endArrow=open;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" target="node-processor" value="Scrape">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1010" y="107" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="edge-prom-graf" edge="1" parent="1" source="node-prometheus" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#ff8f00;strokeWidth=2;endArrow=block;" target="node-grafana" value="PromQL">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="edge-kui-kafka" edge="1" parent="1" source="node-kafkaui" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#ab47bc;strokeWidth=1.5;dashed=1;endArrow=open;" target="node-kafka" value="Monitor">
-          <mxGeometry relative="1" x="0.2063" as="geometry">
-            <mxPoint x="-1" as="offset" />
+          <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1550" y="620" />
-              <mxPoint x="625.06" y="620" />
+              <mxPoint x="1270" y="520" />
+              <mxPoint x="550" y="520" />
             </Array>
           </mxGeometry>
         </mxCell>

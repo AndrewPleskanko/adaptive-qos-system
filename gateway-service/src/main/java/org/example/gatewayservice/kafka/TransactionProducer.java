@@ -6,6 +6,7 @@ import com.thesis.proto.PrioritizedTransaction;
 import com.thesis.proto.Priority;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.annotation.PostConstruct;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,20 @@ public class TransactionProducer {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+
+    @PostConstruct
+    public void init() {
+        ClassLoader original = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+            Class.forName("org.apache.kafka.clients.producer.ProducerConfig", true, getClass().getClassLoader());
+            log.info("Kafka ProducerConfig successfully pre-initialized on Spring Boot ClassLoader");
+        } catch (Throwable t) {
+            log.warn("Kafka ProducerConfig pre-initialization note: {}", t.getMessage());
+        } finally {
+            Thread.currentThread().setContextClassLoader(original);
+        }
+    }
 
     public void sendTransaction(PrioritizedTransaction prioritizedTransaction) {
         String topic = getTopicForPriority(prioritizedTransaction.getPriority());
